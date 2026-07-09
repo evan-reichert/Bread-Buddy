@@ -1,0 +1,12 @@
+.appShell {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6f7fb;
+}
+
+#root {
+  min-height: 100vh;
+}

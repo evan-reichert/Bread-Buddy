@@ -1,0 +1,26 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.tabsHeader {
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 1px solid #ccc;
+}
+
+.tab {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.activeTab {
+    padding: 10px;
+    font-weight: bold;
+    border-bottom: 2px solid blue;
+}
+
+.tabContent {
+    padding: 20px;
+}
