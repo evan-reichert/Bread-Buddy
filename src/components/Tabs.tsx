@@ -1,6 +1,7 @@
 // Here is where we will create the tabs boilerplate
 // Import the dependencies that we will need to create the tabs component
 import { useState } from 'react';
+import bblogo from '../assets/bblogo.png';
 import './Tabs.css';
 
 // Define the tabs function that will be used to create the tabs component
@@ -10,6 +11,10 @@ function Tabs() {
     const StyleSheet = {
         container: 'container',
         tabsHeader: 'tabsHeader',
+        brandSection: 'brandSection',
+        brandLogo: 'brandLogo',
+        brandTitle: 'brandTitle',
+        tabsNav: 'tabsNav',
         tab: 'tab',
         activeTab: 'activeTab',
         tabContent: 'tabContent',
@@ -20,24 +25,30 @@ function Tabs() {
 
             {/* Create the tabs header */}
             <div className={StyleSheet.tabsHeader}>
+                <div className={StyleSheet.brandSection}>
+                    <img src={bblogo} className={StyleSheet.brandLogo} alt="Bread Buddy logo" />
+                    <span className={StyleSheet.brandTitle}>Bread Buddy<sup>™</sup></span>
+                </div>
 
-                <div
-                    className={activeTab === "Dashboard" ? StyleSheet.activeTab : StyleSheet.tab}
-                    onClick={() => setActiveTab("Dashboard")}
-                >
-                    Dashboard
-                </div>
-                <div
-                    className={activeTab === "Bank" ? StyleSheet.activeTab : StyleSheet.tab}
-                    onClick={() => setActiveTab("Bank")}
-                >
-                    Bank
-                </div>
-                <div
-                    className={activeTab === "Goals" ? StyleSheet.activeTab : StyleSheet.tab}
-                    onClick={() => setActiveTab("Goals")}
-                >
-                    Goals
+                <div className={StyleSheet.tabsNav}>
+                    <div
+                        className={activeTab === "Dashboard" ? StyleSheet.activeTab : StyleSheet.tab}
+                        onClick={() => setActiveTab("Dashboard")}
+                    >
+                        Dashboard
+                    </div>
+                    <div
+                        className={activeTab === "Bank" ? StyleSheet.activeTab : StyleSheet.tab}
+                        onClick={() => setActiveTab("Bank")}
+                    >
+                        Bank
+                    </div>
+                    <div
+                        className={activeTab === "Goals" ? StyleSheet.activeTab : StyleSheet.tab}
+                        onClick={() => setActiveTab("Goals")}
+                    >
+                        Goals
+                    </div>
                 </div>
             </div>
 
