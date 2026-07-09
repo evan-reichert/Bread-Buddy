@@ -1,9 +1,8 @@
 .appShell {
   min-height: 100vh;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  padding: 0;
+  display: block;
   background: #f6f7fb;
 }
 
