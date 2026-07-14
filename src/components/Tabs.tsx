@@ -2,6 +2,7 @@
 // Import the dependencies that we will need to create the tabs component
 import { useState } from 'react';
 import bblogo from '../assets/bblogo.png';
+import Bank from './Bank';
 import './Tabs.css';
 
 // Define the tabs function that will be used to create the tabs component
@@ -49,7 +50,7 @@ function Tabs() {
             <section className="bb-tab-content card shadow-sm border-0">
                 <div className="card-body">
                     {activeTab === 'Dashboard' && <div>Dashboard Content</div>}
-                    {activeTab === 'Bank' && <div>Bank Content</div>}
+                    {activeTab === 'Bank' && <Bank />}
                     {activeTab === 'Goals' && <div>Goals Content</div>}
                 </div>
             </section>
