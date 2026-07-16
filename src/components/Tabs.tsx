@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import bblogo from '../assets/bblogo.png';
 import Bank from './Bank';
+import Dashboard from './Dashboard';
 import './Tabs.css';
 
 // Define the tabs function that will be used to create the tabs component
@@ -49,7 +50,7 @@ function Tabs() {
             {/* Content for the active tab */}
             <section className="bb-tab-content card shadow-sm border-0">
                 <div className="card-body">
-                    {activeTab === 'Dashboard' && <div>Dashboard Content</div>}
+                    {activeTab === 'Dashboard' && <Dashboard />}
                     {activeTab === 'Bank' && <Bank />}
                     {activeTab === 'Goals' && <div>Goals Content</div>}
                 </div>

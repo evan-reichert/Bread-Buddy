@@ -1,0 +1,104 @@
+/* Here is where we will style the dashboard components */
+.dashboard-budget {
+  font-family: 'Sinistre', 'Avenir Next', 'Segoe UI', sans-serif;
+}
+
+.dashboard-header {
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fff8 100%);
+}
+
+.dashboard-support {
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+}
+
+.dashboard-mascot-shell {
+  width: 148px;
+  height: 148px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.22) 0%, rgba(34, 197, 94, 0.05) 62%, rgba(255, 255, 255, 0) 84%);
+  filter: drop-shadow(0 14px 20px rgba(34, 197, 94, 0.22));
+}
+
+.dashboard-mascot {
+  width: 124px;
+  height: 124px;
+  object-fit: contain;
+}
+
+.dashboard-support-copy {
+  max-width: 560px;
+}
+
+.dashboard-kicker {
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.dashboard-subtabs {
+  gap: 10px;
+}
+
+.dashboard-subtab-link {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: #374151;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.dashboard-subtab-link:hover {
+  background: #eef2ff;
+  border-color: #dbe3ff;
+  color: #374151;
+}
+
+.dashboard-subtab-link.active,
+.dashboard-subtab-link.active:hover,
+.dashboard-subtab-link:focus {
+  color: #ffffff;
+  font-weight: 700;
+  background: linear-gradient(135deg, #21988e 0%, #22da81 100%);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.28);
+  border-color: transparent;
+}
+
+.dashboard-bubble {
+  border-radius: 18px;
+  cursor: pointer;
+}
+
+.dashboard-bubble .card-body {
+  padding: 1.1rem;
+}
+
+.dashboard-bubble .input-group-text {
+  border-radius: 12px 0 0 12px;
+}
+
+.dashboard-bubble .form-control {
+  border-radius: 0 12px 12px 0;
+}
+
+.dashboard-leftover {
+  color: #16a34a;
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  font-weight: 700;
+}
+
+@media (max-width: 576px) {
+  .dashboard-mascot-shell {
+    width: 118px;
+    height: 118px;
+  }
+
+  .dashboard-mascot {
+    width: 96px;
+    height: 96px;
+  }
+}
