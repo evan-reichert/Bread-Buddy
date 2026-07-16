@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import bbmasc from '../assets/bbmasc.png';
+import greenOrb from '../assets/green-orb.svg';
+import greenSpark from '../assets/green-spark.svg';
 import './Dashboard.css';
 
 type BudgetField = {
@@ -37,6 +39,31 @@ const itemVariants = {
     transition: { duration: 0.4, ease: 'easeOut' },
   },
 } as const;
+
+function BubbleDecor() {
+  return (
+    <>
+      <motion.img
+        src={greenOrb}
+        alt=""
+        aria-hidden="true"
+        className="dashboard-svg-orb"
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: [0.6, 0.9, 0.6], scale: [1, 1.08, 1] }}
+        transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.img
+        src={greenSpark}
+        alt=""
+        aria-hidden="true"
+        className="dashboard-svg-spark"
+        initial={{ opacity: 0, rotate: -8 }}
+        animate={{ opacity: [0.35, 0.75, 0.35], rotate: [-8, 0, -8], y: [0, -4, 0] }}
+        transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </>
+  );
+}
 
 function Dashboard() {
   const [activeDashboardTab, setActiveDashboardTab] = useState<'Budget' | 'Savings'>('Budget');
@@ -150,6 +177,7 @@ function Dashboard() {
                 whileTap={{ scale: 0.985 }}
               >
                 <div className="card-body">
+                  <BubbleDecor />
                   <label htmlFor={field.key} className="form-label text-muted mb-2">
                     {field.label}
                   </label>
@@ -181,6 +209,7 @@ function Dashboard() {
               whileTap={{ scale: 0.985 }}
             >
               <div className="card-body">
+                <BubbleDecor />
                 <label htmlFor="monthlySavings" className="form-label text-muted mb-2">
                   Target Monthly Savings
                 </label>
@@ -210,6 +239,7 @@ function Dashboard() {
               whileTap={{ scale: 0.985 }}
             >
               <div className="card-body">
+                <BubbleDecor />
                 <p className="text-muted mb-2">Projected Leftover</p>
                 <p className="dashboard-leftover mb-2">{formatter.format(totals.leftover)}</p>
                 <p className="text-secondary mb-0 small">
