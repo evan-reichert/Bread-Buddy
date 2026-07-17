@@ -36,6 +36,10 @@
     gap: 12px;
 }
 
+.bb-brand-text {
+    line-height: 1.15;
+}
+
 .bb-brand-logo {
     width: 100px;
     height: 100px;
@@ -45,9 +49,18 @@
 .bb-brand-title {
     font-family: 'Sinistre', 'Avenir Next', 'Segoe UI', sans-serif;
     font-size: 1.35rem;
-    font-weight: 550;
+    font-weight: 600;
     color: #111827;
     letter-spacing: 0.03em;
+}
+
+.bb-brand-subtitle {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: #6b7280;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
 }
 
 .bb-tabs-nav {
@@ -107,5 +120,9 @@
 
     .bb-tab-content {
         margin: 12px 16px 16px;
+    }
+
+    .bb-brand-subtitle {
+        font-size: 0.72rem;
     }
 }

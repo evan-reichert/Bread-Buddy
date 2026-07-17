@@ -2,6 +2,8 @@
 // Import the dependencies that we will need to create the bank tab content
 import bbmasc from '../assets/bbmasc.png';
 import { motion } from 'framer-motion';
+import greenOrb from '../assets/green-orb.svg';
+import greenSpark from '../assets/green-spark.svg';
 import {
     Bar,
     BarChart,
@@ -51,6 +53,31 @@ const riseInVariants = {
         transition: { duration: 0.45, ease: 'easeOut' },
     },
 } as const;
+
+function OrbDecor({ className }: { className: string }) {
+    return (
+        <>
+            <motion.img
+                src={greenOrb}
+                alt=""
+                aria-hidden="true"
+                className={className}
+                initial={{ opacity: 0, scale: 0.86 }}
+                animate={{ opacity: [0.55, 0.9, 0.55], scale: [1, 1.08, 1] }}
+                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.img
+                src={greenSpark}
+                alt=""
+                aria-hidden="true"
+                className={`${className} bank-svg-spark`}
+                initial={{ opacity: 0, rotate: -10 }}
+                animate={{ opacity: [0.3, 0.75, 0.3], rotate: [-10, 2, -10], y: [0, -4, 0] }}
+                transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+        </>
+    );
+}
 
 // Define the function that will be used to calculate the number of months saving
 function getMonthsSaving(startDate: Date): number {
@@ -124,6 +151,7 @@ function Bank() {
                         whileHover={{ y: -6, scale: 1.03, boxShadow: '0 18px 30px rgba(34, 197, 94, 0.35)' }}
                         whileTap={{ scale: 0.98 }}
                     >
+                        <OrbDecor className="bank-svg-orb bank-svg-orb--saved" />
                         <p className="mb-1 saved-bubble-label">Saved so far</p>
                         <p className="mb-0 saved-bubble-value">{currencyFormatter.format(totalSaved)}</p>
                     </motion.div>
@@ -140,6 +168,7 @@ function Bank() {
                             whileTap={{ scale: 0.985 }}
                         >
                             <div className="card-body">
+                                <OrbDecor className="bank-svg-orb bank-svg-orb--metric" />
                                 <p className="text-muted mb-2">{item.label}</p>
                                 <h3 className="h5 mb-0">{item.value}</h3>
                             </div>

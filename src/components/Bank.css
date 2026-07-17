@@ -39,6 +39,8 @@
     color: #ffffff;
     cursor: pointer;
     transition: box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .saved-bubble-label {
@@ -51,6 +53,14 @@
     font-size: clamp(1.5rem, 2.4vw, 2.3rem);
     font-weight: 700;
     line-height: 1.1;
+}
+
+.saved-bubble-label,
+.saved-bubble-value,
+.metric-bubble .card-body p,
+.metric-bubble .card-body h3 {
+    position: relative;
+    z-index: 2;
 }
 
 .bank-chart-wrap {
@@ -66,6 +76,49 @@
 .metric-bubble {
     cursor: pointer;
     border-radius: 14px;
+    overflow: hidden;
+}
+
+.metric-bubble .card-body {
+    position: relative;
+}
+
+.bank-svg-orb {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.bank-svg-orb--saved {
+    width: 170px;
+    height: 170px;
+    right: -62px;
+    top: -62px;
+    opacity: 0.6;
+}
+
+.bank-svg-orb--metric {
+    width: 120px;
+    height: 120px;
+    right: -38px;
+    top: -36px;
+    opacity: 0.45;
+}
+
+.bank-svg-spark.bank-svg-orb--saved {
+    width: 66px;
+    height: 66px;
+    right: 8px;
+    top: 8px;
+    opacity: 0.7;
+}
+
+.bank-svg-spark.bank-svg-orb--metric {
+    width: 52px;
+    height: 52px;
+    right: 8px;
+    top: 8px;
+    opacity: 0.6;
 }
 
 @media (max-width: 992px) {

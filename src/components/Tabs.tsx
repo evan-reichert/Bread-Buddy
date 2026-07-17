@@ -18,7 +18,10 @@ function Tabs() {
                 <div className="w-100 d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div className="bb-brand-section d-flex align-items-center">
                         <img src={bblogo} className="bb-brand-logo" alt="Bread Buddy logo" />
-                        <span className="bb-brand-title">Bread Buddy</span>
+                        <div className="bb-brand-text d-flex flex-column">
+                            <span className="bb-brand-title">Bread Buddy</span>
+                            <span className="bb-brand-subtitle">Keep your bread up.</span>
+                        </div>
                     </div>
 
                     <nav className="nav nav-pills bb-tabs-nav" aria-label="Main sections">
