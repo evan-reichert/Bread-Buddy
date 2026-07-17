@@ -13,3 +13,15 @@
 </p>
 
 ---
+
+## Database (PostgreSQL)
+
+Bank tab persistence is defined in [database/database.py](database/database.py).
+
+1. Set `DATABASE_URL`:
+	- `postgresql://user:password@localhost:5432/bread_buddy`
+2. Install Python dependency:
+	- `pip install -r database/requirements.txt`
+3. Initialize tables:
+	- `python database/database.py`
+
