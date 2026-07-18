@@ -6,9 +6,24 @@ import Bank from './Bank';
 import Dashboard from './Dashboard';
 import './Tabs.css';
 
+export type BudgetInputs = {
+    monthlyIncome: string;
+    rent: string;
+    utilities: string;
+    other: string;
+    monthlySavings: string;
+};
+
 // Define the tabs function that will be used to create the tabs component
 function Tabs() {
     const [activeTab, setActiveTab] = useState<string>('Dashboard');
+    const [budgetInputs, setBudgetInputs] = useState<BudgetInputs>({
+        monthlyIncome: '',
+        rent: '',
+        utilities: '',
+        other: '',
+        monthlySavings: '',
+    });
 
     return (
         <div className="bb-container d-flex flex-column min-vh-100 w-100">
@@ -53,8 +68,10 @@ function Tabs() {
             {/* Content for the active tab */}
             <section className="bb-tab-content card shadow-sm border-0">
                 <div className="card-body">
-                    {activeTab === 'Dashboard' && <Dashboard />}
-                    {activeTab === 'Bank' && <Bank />}
+                    {activeTab === 'Dashboard' && (
+                        <Dashboard budgetInputs={budgetInputs} onBudgetInputsChange={setBudgetInputs} />
+                    )}
+                    {activeTab === 'Bank' && <Bank budgetInputs={budgetInputs} />}
                     {activeTab === 'Goals' && <div>Goals Content</div>}
                 </div>
             </section>

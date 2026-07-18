@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Auth from './components/Auth';
+import Auth from './components/Acc-Created';
 import Tabs from './components/Tabs';
 import './App.css';
 

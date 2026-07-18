@@ -1,6 +1,5 @@
 // Here is where we will create the bank tab content
 // Import the dependencies that we will need to create the bank tab content
-import bbmasc from '../assets/bbmasc.png';
 import { motion } from 'framer-motion';
 import greenOrb from '../assets/green-orb.svg';
 import greenSpark from '../assets/green-spark.svg';
@@ -13,6 +12,8 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import Health from './Health';
+import type { BudgetInputs } from './Tabs';
 import './Bank.css';
 
 // Define the WeeklySavings type and the weekly savings data that will be used to create the bank tab content
@@ -20,16 +21,6 @@ type WeeklySavings = {
     week: string;
     amount: number;
 };
-// Define the weekly savings data that will be used to create the bank tab content
-const weeklySavingsData: WeeklySavings[] = [
-    { week: 'Week 1', amount: 45 },
-    { week: 'Week 2', amount: 70 },
-    { week: 'Week 3', amount: 95 },
-    { week: 'Week 4', amount: 82 },
-];
-
-// Define the savings start date that will be used to calculate the number of months saving
-const savingsStartDate = new Date('2026-01-01');
 
 // Define the animation variants that will be used to create the bank tab content
 const containerVariants = {
@@ -79,22 +70,33 @@ function OrbDecor({ className }: { className: string }) {
     );
 }
 
-// Define the function that will be used to calculate the number of months saving
-function getMonthsSaving(startDate: Date): number {
-    const now = new Date();
-    const yearsDiff = now.getFullYear() - startDate.getFullYear();
-    const monthsDiff = now.getMonth() - startDate.getMonth();
-    return Math.max(1, yearsDiff * 12 + monthsDiff + 1);
+function buildWeeklySavings(totalSaved: number): WeeklySavings[] {
+    const weights = [0.18, 0.24, 0.29, 0.29];
+    return weights.map((weight, index) => ({
+        week: `Week ${index + 1}`,
+        amount: Math.round(totalSaved * weight),
+    }));
 }
 
 // Define the bank function that will be used to create the bank tab content
-function Bank() {
-    const totalSaved = 1462;
-    const monthlyGoal = 1600;
+type BankProps = {
+    budgetInputs: BudgetInputs;
+};
+
+function Bank({ budgetInputs }: BankProps) {
+    const income = Number(budgetInputs.monthlyIncome) || 0;
+    const rent = Number(budgetInputs.rent) || 0;
+    const utilities = Number(budgetInputs.utilities) || 0;
+    const other = Number(budgetInputs.other) || 0;
+    const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
+    const fixedCosts = rent + utilities + other;
+    const totalSaved = Math.max(0, income - fixedCosts);
     const remainingToGoal = Math.max(0, monthlyGoal - totalSaved);
-    const monthsSaving = getMonthsSaving(savingsStartDate);
+    const weeklySavingsData = buildWeeklySavings(totalSaved);
     const monthToDateContribution = weeklySavingsData.reduce((sum, item) => sum + item.amount, 0);
     const weeklyAverage = Math.round(monthToDateContribution / weeklySavingsData.length);
+    const bestWeekAmount = Math.max(...weeklySavingsData.map((item) => item.amount), 0);
+    const nextMilestone = totalSaved > 0 ? Math.ceil(totalSaved / 500) * 500 : 500;
 
     // Define the currency formatter that will be used to format the currency values
     const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -118,45 +120,7 @@ function Bank() {
             initial="hidden"
             animate="visible"
         >
-            <motion.div className="bank-hero card border-0 shadow-sm mb-4" variants={riseInVariants}>
-                <div className="card-body d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
-                    <div className="d-flex align-items-center gap-3">
-                        <motion.div
-                            className="bank-mascot-shell"
-                            initial={{ scale: 0.9, opacity: 0, y: 16 }}
-                            animate={{
-                                scale: [1, 1.04, 1],
-                                y: [0, -8, 0],
-                                opacity: 1,
-                            }}
-                            transition={{
-                                opacity: { duration: 0.45, ease: 'easeOut' },
-                                scale: { duration: 4.8, repeat: Infinity, ease: 'easeInOut' },
-                                y: { duration: 4.8, repeat: Infinity, ease: 'easeInOut' },
-                            }}
-                            whileHover={{ scale: 1.08, rotate: -3 }}
-                        >
-                            <img src={bbmasc} alt="Bread Buddy mascot" className="bank-mascot" />
-                        </motion.div>
-
-                        <div>
-                            <p className="text-uppercase text-muted mb-1 bank-kicker">Bread Buddy Bank</p>
-                            <h2 className="h4 mb-1">Your savings are on a solid streak.</h2>
-                            <p className="mb-0 text-secondary">{monthsSaving} months of consistent saving progress.</p>
-                        </div>
-                    </div>
-
-                    <motion.div
-                        className="saved-bubble text-center"
-                        whileHover={{ y: -6, scale: 1.03, boxShadow: '0 18px 30px rgba(34, 197, 94, 0.35)' }}
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        <OrbDecor className="bank-svg-orb bank-svg-orb--saved" />
-                        <p className="mb-1 saved-bubble-label">Saved so far</p>
-                        <p className="mb-0 saved-bubble-value">{currencyFormatter.format(totalSaved)}</p>
-                    </motion.div>
-                </div>
-            </motion.div>
+            <Health budgetInputs={budgetInputs} />
 
             <div className="row g-3 mb-4">
                 {metricCards.map((item) => (
@@ -209,9 +173,9 @@ function Bank() {
                 <div className="card-body">
                     <h3 className="h5 mb-3">Quick insights</h3>
                     <ul className="bank-insights list-unstyled mb-0">
-                        <li>Best week this month: <strong>{currencyFormatter.format(95)}</strong></li>
-                        <li>Consistency streak: <strong>{monthsSaving} months</strong></li>
-                        <li>Next milestone: <strong>{currencyFormatter.format(2000)}</strong></li>
+                        <li>Best projected week: <strong>{currencyFormatter.format(bestWeekAmount)}</strong></li>
+                        <li>Fixed monthly costs: <strong>{currencyFormatter.format(fixedCosts)}</strong></li>
+                        <li>Next milestone: <strong>{currencyFormatter.format(nextMilestone)}</strong></li>
                     </ul>
                 </div>
             </motion.article>

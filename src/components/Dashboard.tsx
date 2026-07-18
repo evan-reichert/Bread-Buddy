@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import bbmasc from '../assets/bbmasc.png';
 import greenOrb from '../assets/green-orb.svg';
 import greenSpark from '../assets/green-spark.svg';
+import type { BudgetInputs } from './Tabs';
 import './Dashboard.css';
 
 type BudgetField = {
@@ -65,19 +66,17 @@ function BubbleDecor() {
   );
 }
 
-function Dashboard() {
-  const [activeDashboardTab, setActiveDashboardTab] = useState<'Budget' | 'Savings'>('Budget');
-  const [budget, setBudget] = useState({
-    monthlyIncome: '',
-    rent: '',
-    utilities: '',
-    other: '',
-    monthlySavings: '',
-  });
+type DashboardProps = {
+  budgetInputs: BudgetInputs;
+  onBudgetInputsChange: (updater: BudgetInputs | ((prev: BudgetInputs) => BudgetInputs)) => void;
+};
 
-  const handleFieldChange = (key: keyof typeof budget, value: string) => {
+function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
+  const [activeDashboardTab, setActiveDashboardTab] = useState<'Budget' | 'Savings'>('Budget');
+
+  const handleFieldChange = (key: keyof BudgetInputs, value: string) => {
     const numericValue = value.replace(/[^\d.]/g, '');
-    setBudget((prev) => ({ ...prev, [key]: numericValue }));
+    onBudgetInputsChange((prev) => ({ ...prev, [key]: numericValue }));
   };
 
   const formatter = new Intl.NumberFormat('en-US', {
@@ -87,9 +86,11 @@ function Dashboard() {
   });
 
   const totals = useMemo(() => {
-    const income = Number(budget.monthlyIncome) || 0;
-    const expenses = (Number(budget.rent) || 0) + (Number(budget.utilities) || 0) + (Number(budget.other) || 0);
-    const savings = Number(budget.monthlySavings) || 0;
+    const income = Number(budgetInputs.monthlyIncome) || 0;
+    const expenses = (Number(budgetInputs.rent) || 0)
+      + (Number(budgetInputs.utilities) || 0)
+      + (Number(budgetInputs.other) || 0);
+    const savings = Number(budgetInputs.monthlySavings) || 0;
 
     return {
       income,
@@ -97,7 +98,7 @@ function Dashboard() {
       savings,
       leftover: Math.max(0, income - expenses - savings),
     };
-  }, [budget]);
+  }, [budgetInputs]);
 
   return (
     <motion.section
@@ -188,7 +189,7 @@ function Dashboard() {
                       type="text"
                       inputMode="decimal"
                       className="form-control"
-                      value={budget[field.key]}
+                      value={budgetInputs[field.key]}
                       onChange={(event) => handleFieldChange(field.key, event.target.value)}
                       placeholder="0"
                     />
@@ -220,7 +221,7 @@ function Dashboard() {
                     type="text"
                     inputMode="decimal"
                     className="form-control"
-                    value={budget.monthlySavings}
+                    value={budgetInputs.monthlySavings}
                     onChange={(event) => handleFieldChange('monthlySavings', event.target.value)}
                     placeholder="0"
                   />

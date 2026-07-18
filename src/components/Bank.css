@@ -3,60 +3,6 @@
     font-family: 'Sinistre', 'Avenir Next', 'Segoe UI', sans-serif;
 }
 
-.bank-hero {
-    border-radius: 16px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7fff8 100%);
-}
-
-.bank-mascot-shell {
-    width: 172px;
-    height: 172px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(34, 197, 94, 0.22) 0%, rgba(34, 197, 94, 0.04) 62%, rgba(255, 255, 255, 0) 80%);
-    filter: drop-shadow(0 18px 24px rgba(34, 197, 94, 0.24));
-    flex: 0 0 auto;
-}
-
-.bank-mascot {
-    width: 150px;
-    height: 150px;
-    object-fit: contain;
-}
-
-.bank-kicker {
-    letter-spacing: 0.08em;
-    font-size: 0.78rem;
-}
-
-.saved-bubble {
-    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-    border-radius: 999px;
-    min-width: 220px;
-    padding: 18px 24px;
-    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.25);
-    color: #ffffff;
-    cursor: pointer;
-    transition: box-shadow 0.2s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.saved-bubble-label {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-.saved-bubble-value {
-    font-size: clamp(1.5rem, 2.4vw, 2.3rem);
-    font-weight: 700;
-    line-height: 1.1;
-}
-
-.saved-bubble-label,
-.saved-bubble-value,
 .metric-bubble .card-body p,
 .metric-bubble .card-body h3 {
     position: relative;
@@ -89,28 +35,12 @@
     z-index: 1;
 }
 
-.bank-svg-orb--saved {
-    width: 170px;
-    height: 170px;
-    right: -62px;
-    top: -62px;
-    opacity: 0.6;
-}
-
 .bank-svg-orb--metric {
     width: 120px;
     height: 120px;
     right: -38px;
     top: -36px;
     opacity: 0.45;
-}
-
-.bank-svg-spark.bank-svg-orb--saved {
-    width: 66px;
-    height: 66px;
-    right: 8px;
-    top: 8px;
-    opacity: 0.7;
 }
 
 .bank-svg-spark.bank-svg-orb--metric {
@@ -121,23 +51,7 @@
     opacity: 0.6;
 }
 
-@media (max-width: 992px) {
-    .saved-bubble {
-        width: 100%;
-    }
-}
-
 @media (max-width: 576px) {
-    .bank-mascot-shell {
-        width: 128px;
-        height: 128px;
-    }
-
-    .bank-mascot {
-        width: 112px;
-        height: 112px;
-    }
-
     .bank-chart-wrap {
         height: 230px;
     }
