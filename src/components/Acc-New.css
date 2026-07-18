@@ -1,1 +1,111 @@
 /* Here is where we will style the components for the account creation page */
+.acc-new-page {
+	min-height: 100vh;
+	background: radial-gradient(circle at top right, #ecfdf3 0%, #f6f7fb 55%);
+	font-family: 'Sinistre', 'Avenir Next', 'Segoe UI', sans-serif;
+}
+
+.acc-new-header-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+}
+
+.acc-new-header-logo-shell {
+	width: 90px;
+	height: 90px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	background: radial-gradient(circle, rgba(34, 197, 94, 0.16) 0%, rgba(34, 197, 94, 0.03) 68%, rgba(255, 255, 255, 0) 85%);
+}
+
+.acc-new-header-logo {
+	width: 90px;
+	height: 90px;
+	object-fit: contain;
+}
+
+.acc-new-header-title {
+	font-size: 1.65rem;
+	font-weight: 600;
+	color: #111827;
+	letter-spacing: 0.03em;
+}
+
+.acc-new-card {
+	width: 100%;
+	max-width: 500px;
+	border-radius: 22px;
+	background: #ffffff;
+	border: 1px solid rgba(34, 197, 94, 0.15) !important;
+	overflow: hidden;
+	transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.acc-new-card:hover,
+.acc-new-card:focus-within {
+	transform: translateY(-6px) scale(1.01);
+	box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(34, 197, 94, 0.25) !important;
+	border-color: rgba(34, 197, 94, 0.28) !important;
+}
+
+.auth-create-bubbles {
+	display: grid;
+	gap: 10px;
+}
+
+.auth-input-bubble {
+	border-radius: 14px;
+	border: 1px solid #dbe4ea;
+	padding: 0.72rem 0.95rem;
+	background: #f8fafc;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.auth-input-bubble:focus {
+	background: #ffffff;
+	border-color: rgba(34, 197, 94, 0.5);
+	box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.15);
+}
+
+.acc-new-card .btn {
+	border-radius: 14px;
+	transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.acc-new-card .btn:hover,
+.acc-new-card .btn:focus-visible {
+	transform: translateY(-2px);
+}
+
+.acc-new-card .btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.7;
+}
+
+.acc-new-error {
+	color: #b91c1c;
+	font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+	.acc-new-header-logo-shell,
+	.acc-new-header-logo {
+		width: 46px;
+		height: 46px;
+	}
+
+	.acc-new-header-title {
+		font-size: 1.45rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.acc-new-card,
+	.acc-new-card .btn,
+	.auth-input-bubble {
+		transition: none;
+	}
+}
