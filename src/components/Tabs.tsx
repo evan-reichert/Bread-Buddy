@@ -4,8 +4,10 @@ import { useState } from 'react';
 import bblogo from '../assets/bblogo.png';
 import Bank from './Bank';
 import Dashboard from './Dashboard';
+import Goals from './Goals';
 import './Tabs.css';
 
+// Define the BudgetInputs type that will be used to create the tabs component
 export type BudgetInputs = {
     monthlyIncome: string;
     rent: string;
@@ -72,7 +74,7 @@ function Tabs() {
                         <Dashboard budgetInputs={budgetInputs} onBudgetInputsChange={setBudgetInputs} />
                     )}
                     {activeTab === 'Bank' && <Bank budgetInputs={budgetInputs} />}
-                    {activeTab === 'Goals' && <div>Goals Content</div>}
+                    {activeTab === 'Goals' && <Goals budgetInputs={budgetInputs} />}
                 </div>
             </section>
             </div>

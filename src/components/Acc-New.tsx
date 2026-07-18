@@ -11,23 +11,28 @@ type AccNewProps = {
 
 // Define the account creation function that will be used to create the account creation component
 function AuthNew({ onContinue }: AccNewProps) {
+    // Use the useReducedMotion hook to determine if the user prefers reduced motion
     const reduceMotion = useReducedMotion();
     const [credentials, setCredentials] = useState({ username: '', password: '', confirmPassword: '' });
     const [errorMessage, setErrorMessage] = useState('');
     const [isCreating, setIsCreating] = useState(false);
 
+    // Define the username, password, and confirmPassword variables that will be used to validate the account creation form
     const username = credentials.username.trim();
     const password = credentials.password;
     const confirmPassword = credentials.confirmPassword;
 
+    // Define the usernameIsValid, passwordIsValid, passwordsMatch, and canCreate variables
     const usernameIsValid = /^[a-zA-Z0-9._-]{3,24}$/.test(username);
     const passwordIsValid = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password);
     const passwordsMatch = password.length > 0 && password === confirmPassword;
     const canCreate = usernameIsValid && passwordIsValid && passwordsMatch && !isCreating;
-
+    
+    // Define the handleCreateAccount function that will be used to handle the account creation form submission
     const handleCreateAccount = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        // Validate the username, password, and confirmPassword fields and set the errorMessage state accordingly
         if (!usernameIsValid) {
             setErrorMessage('Username must be 3-24 characters and can include letters, numbers, dot, underscore, or hyphen.');
             return;
@@ -58,6 +63,7 @@ function AuthNew({ onContinue }: AccNewProps) {
         }
     };
 
+    // Animate the account creation component using framer-motion and return the TSX for the account creation component
     return (
         <motion.section
             className="acc-new-page d-flex flex-column align-items-center justify-content-center px-3 py-5"

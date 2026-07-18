@@ -12,10 +12,12 @@ type AuthProps = {
 
 // Define the authentication function that will be used to create the authentication component
 function Auth({ onCreateAccount, onSignIn }: AuthProps) {
+    // Use the useReducedMotion hook to determine if the user prefers reduced motion
     const reduceMotion = useReducedMotion();
     const [credentials, setCredentials] = useState({ username: '', password: '' });
     const canSignIn = credentials.username.trim().length > 0 && credentials.password.trim().length > 0;
 
+    // Animate the authentication component using framer-motion and return the TSX for the authentication component
     return (
         <motion.section
             className="auth-page d-flex flex-column align-items-center justify-content-center px-3 py-5"
