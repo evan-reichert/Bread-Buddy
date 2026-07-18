@@ -47,9 +47,6 @@ function Auth({ onCreateAccount, onSignIn }: AuthProps) {
                 <div className="card-body p-4 p-md-5 text-center">
                     <p className="text-uppercase text-secondary fw-semibold mb-2">Welcome</p>
                     <h1 className="h3 mb-3">Sign in to Bread Buddy</h1>
-                    <p className="auth-support-text text-muted mb-4">
-                        Secure account access with a calm, focused workflow.
-                    </p>
 
                     <p className="create-account-text text-muted mb-4">
                         Don't have an account? Create one now to start managing your money with Bread Buddy.

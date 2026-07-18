@@ -6,10 +6,12 @@ import greenSpark from '../assets/green-spark.svg';
 import type { BudgetInputs } from './Tabs';
 import './Health.css';
 
+// Define the HealthProps type that will be used to create the savings health component
 type HealthProps = {
 	budgetInputs: BudgetInputs;
 };
 
+// Define the animation variants that will be used to create the savings health component
 function OrbDecor({ className }: { className: string }) {
 	return (
 		<>
@@ -35,26 +37,32 @@ function OrbDecor({ className }: { className: string }) {
 	);
 }
 
+// Define the Health function that will be used to create the savings health component
 function Health({ budgetInputs }: HealthProps) {
-	const income = Number(budgetInputs.monthlyIncome) || 0;
+	// Calculate the total saved, savings rate, and goal progress based on the budget inputs
+    const income = Number(budgetInputs.monthlyIncome) || 0;
 	const rent = Number(budgetInputs.rent) || 0;
 	const utilities = Number(budgetInputs.utilities) || 0;
 	const other = Number(budgetInputs.other) || 0;
 	const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
 
+    // Calculate the fixed costs, total saved, savings rate, and goal progress based on the budget inputs
 	const fixedCosts = rent + utilities + other;
 	const totalSaved = Math.max(0, income - fixedCosts);
 	const savingsRate = income > 0 ? totalSaved / income : 0;
 	const goalProgress = monthlyGoal > 0 ? totalSaved / monthlyGoal : 0;
 
+    // Formats data into a currency format for display
 	const currencyFormatter = new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: 'USD',
 		maximumFractionDigits: 0,
 	});
 
+    // Define the progress statement that will be displayed based on the budget inputs and calculated values
 	let progressStatement = 'Enter your monthly income and fixed costs in Dashboard to view your progress.';
 
+    // Update the progress statement based on the budget inputs and calculated values
 	if (income > 0 && monthlyGoal <= 0) {
 		progressStatement = 'Set a monthly savings target in Dashboard to track goal progress accurately.';
 	} else if (income > 0 && monthlyGoal > 0) {
@@ -69,6 +77,7 @@ function Health({ budgetInputs }: HealthProps) {
 		}
 	}
 
+    // Return the TSX for the savings health component
 	return (
 		<motion.div className="health-hero card border-0 shadow-sm mb-4" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: 'easeOut' }}>
 			<div className="card-body d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">

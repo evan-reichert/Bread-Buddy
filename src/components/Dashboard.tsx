@@ -14,10 +14,10 @@ type BudgetField = {
 };
 
 const budgetFields: BudgetField[] = [
-  { key: 'monthlyIncome', label: 'Monthly Income' },
-  { key: 'rent', label: 'Rent' },
+  { key: 'monthlyIncome', label: 'Monthly Net Income' },
+  { key: 'rent', label: 'Rent or Mortgage Payment' },
   { key: 'utilities', label: 'Utilities' },
-  { key: 'other', label: 'Other Fixed Costs' },
+  { key: 'other', label: 'Other Fixed Costs' }
 ];
 
 const containerVariants = {
