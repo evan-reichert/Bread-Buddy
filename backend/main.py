@@ -3,6 +3,7 @@
 import os
 import re
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,30 @@ from backend.security.passwords import hash_password
 from database.database import create_user, get_user_by_username, init_db
 
 app = FastAPI()
+
+
+def _load_local_env() -> None:
+    """Load key=value pairs from project .env for local development."""
+    env_file = Path(__file__).resolve().parents[1] / ".env"
+    if not env_file.exists():
+        return
+
+    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+_load_local_env()
+
+
+def _database_is_configured() -> bool:
+    return bool(os.getenv("DATABASE_URL", "").strip())
 
 
 class RegisterRequest(BaseModel):
@@ -66,7 +91,7 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_init_db() -> None:
     # Initialize tables only when a database is configured.
-    if os.getenv("DATABASE_URL", "").strip():
+    if _database_is_configured():
         init_db()
 
 # GET endpoint for root path
@@ -82,7 +107,20 @@ def health_check():
 # POST endpoint for user registration
 @app.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: RegisterRequest):
-    existing_user = get_user_by_username(payload.username)
+    if not _database_is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is not configured. Set DATABASE_URL before registering users.",
+        )
+
+    try:
+        existing_user = get_user_by_username(payload.username)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to access user store.",
+        ) from exc
+
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

@@ -52,6 +52,8 @@ def _database_url() -> str:
 	database_url = os.getenv("DATABASE_URL", "").strip()
 	if not database_url:
 		raise RuntimeError("DATABASE_URL is not set.")
+	if database_url.startswith("postgresql+psycopg://"):
+		database_url = database_url.replace("postgresql+psycopg://", "postgresql://", 1)
 	return database_url
 
 # Define a function to dynamically import the psycopg and psycopg.rows modules, raising an error if they are not installed

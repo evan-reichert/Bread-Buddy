@@ -1,2 +1,4 @@
 psycopg[binary]>=3.2.0
 fastapi[standard]>=0.95.2
+bcrypt>=4.0.1
+pydantic>=2.10.9
