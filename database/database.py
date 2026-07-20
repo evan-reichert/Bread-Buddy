@@ -132,6 +132,7 @@ def create_user(*, username: str, password_hash: str) -> dict[str, Any]:
 		"username": new_user["username"],
 		"created_at": new_user["created_at"],
 	}
+	
 
 # Define a function to create or update a user's bank profile, inserting or updating the relevant fields in the database
 def upsert_bank_profile(

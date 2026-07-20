@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
-from backend.security.passwords import hash_password
+from backend.security.passwords import hash_password, verify_password
 from database.database import create_user, get_user_by_username, init_db
 
 app = FastAPI()
@@ -57,6 +57,26 @@ class RegisterRequest(BaseModel):
     def validate_password(cls, value: str) -> str:
         if not re.search(r"[A-Za-z]", value) or not re.search(r"\d", value):
             raise ValueError("Password must include at least one letter and one number.")
+        if value.strip() == "":
+            raise ValueError("Password cannot be empty or whitespace.")
+        return value
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=150)
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        username = value.strip()
+        if username == "":
+            raise ValueError("Username cannot be empty or whitespace.")
+        return username
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
         if value.strip() == "":
             raise ValueError("Password cannot be empty or whitespace.")
         return value
@@ -144,3 +164,37 @@ def register_user(payload: RegisterRequest):
         created_at=user["created_at"],
         message="User registered successfully.",
     )
+
+# Login endpoint
+def verify_user_credentials(username: str, password: str) -> bool:
+    """Verify user credentials against the database."""
+    try:
+        user = get_user_by_username(username)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to access user store.",
+        ) from exc
+
+    if not user:
+        return False
+
+    hashed_password = user["password_hash"]
+    return verify_password(password, hashed_password)
+
+# Actual endpoint for login
+@app.post("/login")
+def login_user(payload: LoginRequest):
+    if not _database_is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is not configured. Set DATABASE_URL before logging in.",
+        )
+
+    if verify_user_credentials(payload.username, payload.password):
+        return JSONResponse(content={"message": "Login successful."}, status_code=200)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password.",
+        )
