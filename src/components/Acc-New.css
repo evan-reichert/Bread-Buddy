@@ -90,6 +90,16 @@
 	font-size: 0.9rem;
 }
 
+.acc-new-back-btn {
+	text-decoration: none;
+	color: #4b5563;
+}
+
+.acc-new-back-btn:hover,
+.acc-new-back-btn:focus-visible {
+	color: #166534;
+}
+
 @media (max-width: 576px) {
 	.acc-new-header-logo-shell,
 	.acc-new-header-logo {

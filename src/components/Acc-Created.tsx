@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import bblogo from '../assets/bblogo.png';
+import type { Credentials } from '../lib/auth';
 import './Acc-Created.css';
 
 type AuthProps = {
     onCreateAccount: () => void;
-    onSignIn: () => void;
+    onSignIn: (credentials: Credentials) => Promise<void>;
 };
 
 // Define the authentication function that will be used to create the authentication component
@@ -15,7 +16,29 @@ function Auth({ onCreateAccount, onSignIn }: AuthProps) {
     // Use the useReducedMotion hook to determine if the user prefers reduced motion
     const reduceMotion = useReducedMotion();
     const [credentials, setCredentials] = useState({ username: '', password: '' });
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isSigningIn, setIsSigningIn] = useState(false);
     const canSignIn = credentials.username.trim().length > 0 && credentials.password.trim().length > 0;
+
+    const handleSignIn = async () => {
+        if (!canSignIn || isSigningIn) {
+            return;
+        }
+
+        setErrorMessage('');
+        setIsSigningIn(true);
+
+        try {
+            await onSignIn({
+                username: credentials.username.trim(),
+                password: credentials.password,
+            });
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Sign in failed. Please try again.');
+        } finally {
+            setIsSigningIn(false);
+        }
+    };
 
     // Animate the authentication component using framer-motion and return the TSX for the authentication component
     return (
@@ -76,8 +99,10 @@ function Auth({ onCreateAccount, onSignIn }: AuthProps) {
                         />
                     </div>
 
-                    <button type="button" className="btn btn-outline-secondary w-100" onClick={onSignIn} disabled={!canSignIn}>
-                        Sign In
+                    {errorMessage && <p className="auth-error mb-3">{errorMessage}</p>}
+
+                    <button type="button" className="btn btn-outline-secondary w-100" onClick={handleSignIn} disabled={!canSignIn || isSigningIn}>
+                        {isSigningIn ? 'Signing in...' : 'Sign In'}
                     </button>
                 </div>
             </motion.div>

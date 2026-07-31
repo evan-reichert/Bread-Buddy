@@ -3,14 +3,16 @@
 import { useState, type FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import bblogo from '../assets/bblogo.png';
+import type { Credentials } from '../lib/auth';
 import './Acc-New.css';
 
 type AccNewProps = {
-    onContinue: () => void;
+    onCreateAccount: (credentials: Credentials) => Promise<void>;
+    onBackToSignIn: () => void;
 };
 
 // Define the account creation function that will be used to create the account creation component
-function AuthNew({ onContinue }: AccNewProps) {
+function AuthNew({ onCreateAccount, onBackToSignIn }: AccNewProps) {
     // Use the useReducedMotion hook to determine if the user prefers reduced motion
     const reduceMotion = useReducedMotion();
     const [credentials, setCredentials] = useState({ username: '', password: '', confirmPassword: '' });
@@ -52,12 +54,9 @@ function AuthNew({ onContinue }: AccNewProps) {
         setIsCreating(true);
 
         try {
-            // Placeholder persistence until backend signup endpoint is connected.
-            localStorage.setItem(
-                'bb_user_signup_draft',
-                JSON.stringify({ username, createdAt: new Date().toISOString() }),
-            );
-            onContinue();
+            await onCreateAccount({ username, password });
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Unable to create account right now.');
         } finally {
             setIsCreating(false);
         }
@@ -127,6 +126,9 @@ function AuthNew({ onContinue }: AccNewProps) {
 
                     <button type="submit" className="btn btn-success w-100" disabled={!canCreate}>
                         {isCreating ? 'Creating...' : 'Create'}
+                    </button>
+                    <button type="button" className="btn btn-link w-100 mt-2 acc-new-back-btn" onClick={onBackToSignIn}>
+                        Back to Sign In
                     </button>
                 </form>
             </motion.div>

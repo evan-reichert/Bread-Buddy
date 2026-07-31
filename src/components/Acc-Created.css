@@ -95,6 +95,11 @@
     letter-spacing: 0.01em;
 }
 
+.auth-error {
+    color: #b91c1c;
+    font-size: 0.9rem;
+}
+
 @keyframes logoPulse {
     0%,
     100% {

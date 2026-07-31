@@ -25,3 +25,18 @@ Bank tab persistence is defined in [database/database.py](database/database.py).
 3. Initialize tables:
 	- `python database/database.py`
 
+## Auth (JWT)
+
+The backend now returns an access token + refresh token from both `/register` and `/login`.
+
+Recommended environment variables:
+
+- `JWT_SECRET_KEY` (required in production; a local dev fallback is used if missing)
+- `JWT_ACCESS_EXPIRE_MINUTES` (default: `15`)
+- `JWT_REFRESH_EXPIRE_DAYS` (default: `30`)
+- `JWT_ISSUER` (optional, default: `bread-buddy-api`)
+
+Frontend API base URL (optional):
+
+- `VITE_API_BASE_URL` (default: `http://127.0.0.1:8000`)
+

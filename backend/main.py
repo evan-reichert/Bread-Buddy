@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from backend.security.passwords import hash_password, verify_password
+from backend.security.tokens import create_token_pair, decode_refresh_token
 from database.database import create_user, get_user_by_username, init_db
 
 app = FastAPI()
@@ -82,10 +84,35 @@ class LoginRequest(BaseModel):
         return value
 
 
-class RegisterResponse(BaseModel):
+class RefreshRequest(BaseModel):
+    refresh_token: str = Field(min_length=1, max_length=4096)
+
+    @field_validator("refresh_token")
+    @classmethod
+    def validate_refresh_token(cls, value: str) -> str:
+        token = value.strip()
+        if token == "":
+            raise ValueError("Refresh token cannot be empty.")
+        return token
+
+
+class TokenPairResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: Literal["bearer"] = "bearer"
+    access_token_expires_in: int
+    refresh_token_expires_in: int
+
+
+class RegisterResponse(TokenPairResponse):
     id: str
     username: str
     created_at: datetime
+    message: str
+
+
+class LoginResponse(TokenPairResponse):
+    username: str
     message: str
 
 # CORS configuration
@@ -150,6 +177,7 @@ def register_user(payload: RegisterRequest):
     try:
         hashed_password = hash_password(payload.password)
         user = create_user(username=payload.username, password_hash=hashed_password)
+        token_pair = create_token_pair(user_id=user["id"], username=user["username"])
     except HTTPException:
         raise
     except Exception as exc:
@@ -163,11 +191,12 @@ def register_user(payload: RegisterRequest):
         username=user["username"],
         created_at=user["created_at"],
         message="User registered successfully.",
+        **token_pair,
     )
 
 # Login endpoint
-def verify_user_credentials(username: str, password: str) -> bool:
-    """Verify user credentials against the database."""
+def authenticate_user(username: str, password: str) -> dict | None:
+    """Return user row when credentials are valid; otherwise None."""
     try:
         user = get_user_by_username(username)
     except Exception as exc:
@@ -177,13 +206,16 @@ def verify_user_credentials(username: str, password: str) -> bool:
         ) from exc
 
     if not user:
-        return False
+        return None
 
     hashed_password = user["password_hash"]
-    return verify_password(password, hashed_password)
+    if not verify_password(password, hashed_password):
+        return None
+
+    return user
 
 # Actual endpoint for login
-@app.post("/login")
+@app.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
 def login_user(payload: LoginRequest):
     if not _database_is_configured():
         raise HTTPException(
@@ -191,10 +223,58 @@ def login_user(payload: LoginRequest):
             detail="Database is not configured. Set DATABASE_URL before logging in.",
         )
 
-    if verify_user_credentials(payload.username, payload.password):
-        return JSONResponse(content={"message": "Login successful."}, status_code=200)
-    else:
+    user = authenticate_user(payload.username, payload.password)
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password.",
         )
+
+    token_pair = create_token_pair(user_id=str(user["id"]), username=user["username"])
+    return LoginResponse(
+        username=user["username"],
+        message="Login successful.",
+        **token_pair,
+    )
+
+
+@app.post("/token/refresh", response_model=TokenPairResponse, status_code=status.HTTP_200_OK)
+def refresh_token(payload: RefreshRequest):
+    if not _database_is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is not configured. Set DATABASE_URL before refreshing tokens.",
+        )
+
+    try:
+        claims = decode_refresh_token(payload.refresh_token)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token.",
+        ) from exc
+
+    user_id = str(claims.get("sub", "")).strip()
+    username = str(claims.get("username", "")).strip()
+    if not user_id or not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token payload.",
+        )
+
+    try:
+        user = get_user_by_username(username)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to access user store.",
+        ) from exc
+
+    if not user or str(user["id"]) != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token is no longer valid.",
+        )
+
+    new_pair = create_token_pair(user_id=user_id, username=username)
+    return TokenPairResponse(**new_pair)
