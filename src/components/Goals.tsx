@@ -66,7 +66,9 @@ function Goals({ budgetInputs }: GoalsProps) {
     const income = Number(budgetInputs.monthlyIncome) || 0;
     const costs = (Number(budgetInputs.rent) || 0)
         + (Number(budgetInputs.utilities) || 0)
-        + (Number(budgetInputs.other) || 0);
+        + (Number(budgetInputs.other) || 0)
+        + (Number(budgetInputs.variableCosts) || 0)
+        + (Number(budgetInputs.investments) || 0);
     const savingsTarget = Number(budgetInputs.monthlySavings) || 0;
     const projectedSavings = Math.max(0, income - costs);
     const projectedDailySavings = projectedSavings / 30;

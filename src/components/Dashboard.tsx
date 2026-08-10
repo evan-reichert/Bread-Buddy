@@ -9,7 +9,7 @@ import type { BudgetInputs } from './Tabs';
 import './Dashboard.css';
 
 type BudgetField = {
-  key: 'monthlyIncome' | 'rent' | 'utilities' | 'other';
+  key: Exclude<keyof BudgetInputs, 'monthlySavings'>;
   label: string;
 };
 
@@ -17,7 +17,9 @@ const budgetFields: BudgetField[] = [
   { key: 'monthlyIncome', label: 'Monthly Net Income' },
   { key: 'rent', label: 'Rent or Mortgage Payment' },
   { key: 'utilities', label: 'Utilities' },
-  { key: 'other', label: 'Other Fixed Costs' }
+  { key: 'other', label: 'Other Fixed Costs' },
+  { key: 'variableCosts', label: 'Variable Costs' },
+  { key: 'investments', label: 'Investments' },
 ];
 
 const containerVariants = {
@@ -89,7 +91,9 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
     const income = Number(budgetInputs.monthlyIncome) || 0;
     const expenses = (Number(budgetInputs.rent) || 0)
       + (Number(budgetInputs.utilities) || 0)
-      + (Number(budgetInputs.other) || 0);
+      + (Number(budgetInputs.other) || 0)
+      + (Number(budgetInputs.variableCosts) || 0)
+      + (Number(budgetInputs.investments) || 0)
     const savings = Number(budgetInputs.monthlySavings) || 0;
 
     return {

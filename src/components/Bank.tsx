@@ -88,8 +88,10 @@ function Bank({ budgetInputs }: BankProps) {
     const rent = Number(budgetInputs.rent) || 0;
     const utilities = Number(budgetInputs.utilities) || 0;
     const other = Number(budgetInputs.other) || 0;
+    const variableCosts = Number(budgetInputs.variableCosts) || 0;
+    const investments = Number(budgetInputs.investments) || 0;
     const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
-    const fixedCosts = rent + utilities + other;
+    const fixedCosts = rent + utilities + other + variableCosts + investments;
     const totalSaved = Math.max(0, income - fixedCosts);
     const remainingToGoal = Math.max(0, monthlyGoal - totalSaved);
     const weeklySavingsData = buildWeeklySavings(totalSaved);

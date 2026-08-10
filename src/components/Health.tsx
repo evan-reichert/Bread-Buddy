@@ -44,10 +44,12 @@ function Health({ budgetInputs }: HealthProps) {
 	const rent = Number(budgetInputs.rent) || 0;
 	const utilities = Number(budgetInputs.utilities) || 0;
 	const other = Number(budgetInputs.other) || 0;
+	const variableCosts = Number(budgetInputs.variableCosts) || 0;
+	const investments = Number(budgetInputs.investments) || 0;
 	const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
 
     // Calculate the fixed costs, total saved, savings rate, and goal progress based on the budget inputs
-	const fixedCosts = rent + utilities + other;
+	const fixedCosts = rent + utilities + other + variableCosts + investments;
 	const totalSaved = Math.max(0, income - fixedCosts);
 	const savingsRate = income > 0 ? totalSaved / income : 0;
 	const goalProgress = monthlyGoal > 0 ? totalSaved / monthlyGoal : 0;

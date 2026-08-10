@@ -13,6 +13,8 @@ export type BudgetInputs = {
     rent: string;
     utilities: string;
     other: string;
+    variableCosts: string;
+    investments: string;
     monthlySavings: string;
 };
 
@@ -24,6 +26,8 @@ function Tabs() {
         rent: '',
         utilities: '',
         other: '',
+        variableCosts: '',
+        investments: '',
         monthlySavings: '',
     });
 
