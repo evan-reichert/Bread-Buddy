@@ -30,7 +30,10 @@ const STORAGE_KEYS = {
   refreshToken: 'bb_refresh_token',
   tokenType: 'bb_token_type',
   username: 'bb_username',
+  lastActivityAt: 'bb_last_activity_at',
 };
+
+export const SESSION_INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000;
 
 async function requestJson<T>(path: string, body: object): Promise<T> {
   let response: Response;
@@ -80,6 +83,7 @@ export function persistSession(tokenPair: TokenPair, username: string): void {
   localStorage.setItem(STORAGE_KEYS.refreshToken, tokenPair.refresh_token);
   localStorage.setItem(STORAGE_KEYS.tokenType, tokenPair.token_type);
   localStorage.setItem(STORAGE_KEYS.username, username);
+  touchSessionActivity();
 }
 
 export function hasStoredSession(): boolean {
@@ -94,4 +98,28 @@ export function clearStoredSession(): void {
   localStorage.removeItem(STORAGE_KEYS.refreshToken);
   localStorage.removeItem(STORAGE_KEYS.tokenType);
   localStorage.removeItem(STORAGE_KEYS.username);
+  localStorage.removeItem(STORAGE_KEYS.lastActivityAt);
+}
+
+function getLastActivityTimestamp(): number | null {
+  const raw = localStorage.getItem(STORAGE_KEYS.lastActivityAt);
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function touchSessionActivity(): void {
+  localStorage.setItem(STORAGE_KEYS.lastActivityAt, String(Date.now()));
+}
+
+export function isSessionExpired(timeoutMs = SESSION_INACTIVITY_TIMEOUT_MS): boolean {
+  const lastActivityAt = getLastActivityTimestamp();
+  if (lastActivityAt === null) {
+    return false;
+  }
+
+  return Date.now() - lastActivityAt >= timeoutMs;
 }
