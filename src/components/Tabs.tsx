@@ -1,8 +1,9 @@
 // Here is where we will create the tabs boilerplate
 // Import the dependencies that we will need to create the tabs component
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import bblogo from '../assets/bblogo.png';
 import Bank from './Bank';
+import { authenticatedGet, authenticatedPut } from '../lib/auth';
 import Dashboard from './Dashboard';
 import Goals from './Goals';
 import './Tabs.css';
@@ -18,9 +19,21 @@ export type BudgetInputs = {
     monthlySavings: string;
 };
 
+type BudgetInputsApi = {
+    monthlyIncome: number;
+    rent: number;
+    utilities: number;
+    other: number;
+    variableCosts: number;
+    investments: number;
+    monthlySavings: number;
+};
+
 // Define the tabs function that will be used to create the tabs component
 function Tabs() {
     const [activeTab, setActiveTab] = useState<string>('Dashboard');
+    const hasHydratedRef = useRef(false);
+    const saveTimeoutRef = useRef<number | null>(null);
     const [budgetInputs, setBudgetInputs] = useState<BudgetInputs>({
         monthlyIncome: '',
         rent: '',
@@ -29,7 +42,65 @@ function Tabs() {
         variableCosts: '',
         investments: '',
         monthlySavings: '',
-    });
+    })
+    useEffect(() => {
+        if (!hasHydratedRef.current) {
+            hasHydratedRef.current = true;
+            return;
+        }
+
+        if (saveTimeoutRef.current !== null) {
+            window.clearTimeout(saveTimeoutRef.current);
+        }
+
+        const toNumber = (value: string) => {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        };
+
+        saveTimeoutRef.current = window.setTimeout(async () => {
+            try {
+                await authenticatedPut('/me/budget-inputs', {
+                    monthlyIncome: toNumber(budgetInputs.monthlyIncome),
+                    rent: toNumber(budgetInputs.rent),
+                    utilities: toNumber(budgetInputs.utilities),
+                    other: toNumber(budgetInputs.other),
+                    variableCosts: toNumber(budgetInputs.variableCosts),
+                    investments: toNumber(budgetInputs.investments),
+                    monthlySavings: toNumber(budgetInputs.monthlySavings),
+                });
+            } catch (error) {
+                console.error('Failed to save budget inputs:', error);
+            }
+        }, 500);
+
+        return () => {
+            if (saveTimeoutRef.current !== null) {
+                window.clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [budgetInputs]);
+
+    useEffect(() => {
+        const fetchBudgetInputs = async () => {
+            try {
+                const response = await authenticatedGet<BudgetInputsApi>('/me/budget-inputs');
+                setBudgetInputs({
+                    monthlyIncome: String(response.monthlyIncome ?? ''),
+                    rent: String(response.rent ?? ''),
+                    utilities: String(response.utilities ?? ''),
+                    other: String(response.other ?? ''),
+                    variableCosts: String(response.variableCosts ?? ''),
+                    investments: String(response.investments ?? ''),
+                    monthlySavings: String(response.monthlySavings ?? ''),
+                });
+            } catch (error) {
+                console.error('Failed to fetch budget inputs:', error);
+            }
+        };
+
+        fetchBudgetInputs();
+    }, []);
 
     return (
         <div className="bb-container d-flex flex-column min-vh-100 w-100">

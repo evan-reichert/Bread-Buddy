@@ -311,7 +311,21 @@ def get_current_user(authorization: str = Header(...)) -> dict:
             detail="Invalid access token payload.",
         )
 
-    return {"id": user_id, "username": username}
+    try:
+        user = get_user_by_username(username)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to access user store.",
+        ) from exc
+
+    if not user or str(user["id"]) != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found for access token.",
+        )
+
+    return {"id": str(user["id"]), "username": user["username"]}
 
 # Budget Inputs Payload, takes expected budget inputs and returns a dictionary with the expected types for each field
 class BudgetInputsPayload(BaseModel):
@@ -360,49 +374,28 @@ def get_budget_inputs(current_user: dict = Depends(get_current_user)):
 @app.put("/me/budget-inputs", status_code=status.HTTP_200_OK, response_model=BudgetInputsPayload)
 def update_budget_inputs(payload: BudgetInputsPayload, current_user: dict = Depends(get_current_user)):
     try:
+        upsert_user_budget_inputs(
+            user_id=str(current_user["id"]),
+            monthly_income=payload.monthlyIncome,
+            rent=payload.rent,
+            utilities=payload.utilities,
+            other=payload.other,
+            variable_costs=payload.variableCosts,
+            investments=payload.investments,
+            monthly_savings=payload.monthlySavings,
+        )
         saved = load_user_budget_inputs(str(current_user["id"]))
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load budget inputs.",
+            detail="Failed to save budget inputs.",
         ) from exc
 
     if not saved:
-        # If no existing record, create a new one
-        try:
-            saved = upsert_user_budget_inputs(
-                user_id=str(current_user["id"]),
-                monthly_income=payload.monthlyIncome,
-                rent=payload.rent,
-                utilities=payload.utilities,
-                other=payload.other,
-                variable_costs=payload.variableCosts,
-                investments=payload.investments,
-                monthly_savings=payload.monthlySavings,
-            )
-        except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create budget inputs.",
-            ) from exc
-    else:
-        # Update the existing record
-        try:
-            saved = upsert_user_budget_inputs(
-                user_id=str(current_user["id"]),
-                monthly_income=payload.monthlyIncome,
-                rent=payload.rent,
-                utilities=payload.utilities,
-                other=payload.other,
-                variable_costs=payload.variableCosts,
-                investments=payload.investments,
-                monthly_savings=payload.monthlySavings,
-            )
-        except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update budget inputs.",
-            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Budget inputs were not found after save.",
+        )
 
     return BudgetInputsPayload(
         monthlyIncome=saved["monthly_income"],

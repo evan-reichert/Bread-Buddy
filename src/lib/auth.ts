@@ -123,3 +123,75 @@ export function isSessionExpired(timeoutMs = SESSION_INACTIVITY_TIMEOUT_MS): boo
 
   return Date.now() - lastActivityAt >= timeoutMs;
 }
+
+// Authenticated GET call
+export async function authenticatedGet<T>(path: string): Promise<T> {
+    const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
+    if (!accessToken) {
+        throw new Error('No access token found. User may not be authenticated.');
+    }
+    
+    let response: Response;
+    try {
+        response = await fetch(`${API_BASE_URL}${path}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            credentials: 'include',
+        });
+    } catch {
+        throw new Error('Unable to reach the API. Make sure the backend is running.');
+    }
+
+    const contentType = response.headers.get('content-type') ?? '';
+    const isJson = contentType.includes('application/json');
+    const payload = isJson ? await response.json() : null;
+
+    if (!response.ok) {
+        const details = payload && payload.detail;
+        const message =
+            (typeof details === 'string' && details) ||
+            `Request failed with status ${response.status}.`;
+        throw new Error(message);
+    }
+
+    return payload as T;
+}
+
+// Authenticated PUT call
+export async function authenticatedPut<T>(path: string, body: object): Promise<T> {
+    const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
+    if (!accessToken) {
+        throw new Error('No access token found. User may not be authenticated.');
+    }
+
+    let response: Response;
+    try {
+        response = await fetch(`${API_BASE_URL}${path}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            credentials: 'include',
+            body: JSON.stringify(body),
+        });
+    } catch {
+        throw new Error('Unable to reach the API. Make sure the backend is running.');
+    }
+
+    const contentType = response.headers.get('content-type') ?? '';
+    const isJson = contentType.includes('application/json');
+    const payload = isJson ? await response.json() : null;
+
+    if (!response.ok) {
+        const details = payload && payload.detail;
+        const message =
+            (typeof details === 'string' && details) ||
+            `Request failed with status ${response.status}.`;
+        throw new Error(message);
+    }
+
+    return payload as T;
+}
