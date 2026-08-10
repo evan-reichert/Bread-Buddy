@@ -24,6 +24,18 @@ CREATE TABLE IF NOT EXISTS users (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS user_budget_inputs (
+	user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+	monthly_income NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	rent NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	utilities NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	other NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	variable_costs NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	investments NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	monthly_savings NUMERIC(12, 2) NOT NULL DEFAULT 0,
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS bank_profiles (
 	id UUID PRIMARY KEY,
 	user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -131,6 +143,43 @@ def create_user(*, username: str, password_hash: str) -> dict[str, Any]:
 		"id": str(new_user["id"]),
 		"username": new_user["username"],
 		"created_at": new_user["created_at"],
+	}
+
+
+def load_user_budget_inputs(user_id: str) -> dict[str, Any] | None:
+	"""Return saved dashboard budget inputs for a user, if present."""
+	with get_connection() as conn:
+		with conn.cursor() as cur:
+			cur.execute(
+				"""
+				SELECT
+					monthly_income,
+					rent,
+					utilities,
+					other,
+					variable_costs,
+					investments,
+					monthly_savings,
+					updated_at
+				FROM user_budget_inputs
+				WHERE user_id = %(user_id)s;
+				""",
+				{"user_id": user_id},
+			)
+			row = cur.fetchone()
+
+	if not row:
+		return None
+
+	return {
+		"monthly_income": float(row["monthly_income"]),
+		"rent": float(row["rent"]),
+		"utilities": float(row["utilities"]),
+		"other": float(row["other"]),
+		"variable_costs": float(row["variable_costs"]),
+		"investments": float(row["investments"]),
+		"monthly_savings": float(row["monthly_savings"]),
+		"updated_at": row["updated_at"],
 	}
 	
 
@@ -267,6 +316,50 @@ def save_bank_dashboard_state(
 	)
 	replace_weekly_savings(user_id=user_id, weekly_entries=weekly_entries)
 
+# Database upsert helper
+def upsert_user_budget_inputs(
+    *,
+    user_id: str,
+    monthly_income: Decimal | float,
+    rent: Decimal | float,
+    utilities: Decimal | float,
+    other: Decimal | float,
+    variable_costs: Decimal | float,
+    investments: Decimal | float,
+    monthly_savings: Decimal | float,
+) -> None:
+    """Create/update dashboard budget inputs for a user."""
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_budget_inputs (
+                    user_id, monthly_income, rent, utilities, other, variable_costs, investments, monthly_savings
+                )
+                VALUES (%(user_id)s, %(monthly_income)s, %(rent)s, %(utilities)s, %(other)s, %(variable_costs)s, %(investments)s, %(monthly_savings)s)
+                ON CONFLICT (user_id)
+                DO UPDATE SET
+                    monthly_income = EXCLUDED.monthly_income,
+                    rent = EXCLUDED.rent,
+                    utilities = EXCLUDED.utilities,
+                    other = EXCLUDED.other,
+                    variable_costs = EXCLUDED.variable_costs,
+                    investments = EXCLUDED.investments,
+                    monthly_savings = EXCLUDED.monthly_savings,
+                    updated_at = NOW();
+                """,
+                {
+                    "user_id": user_id,
+                    "monthly_income": monthly_income,
+                    "rent": rent,
+                    "utilities": utilities,
+                    "other": other,
+                    "variable_costs": variable_costs,
+                    "investments": investments,
+                    "monthly_savings": monthly_savings,
+                },
+            )
+			
 # Driver code to call the init_db function and print a short message to indicate table creation
 if __name__ == "__main__":
 	init_db()

@@ -6,14 +6,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from backend.security.passwords import hash_password, verify_password
-from backend.security.tokens import create_token_pair, decode_refresh_token
-from database.database import create_user, get_user_by_username, init_db
+from backend.security.tokens import create_token_pair, decode_refresh_token, decode_access_token
+from database.database import create_user, get_user_by_username, init_db, load_user_budget_inputs, upsert_user_budget_inputs
 
 app = FastAPI()
 
@@ -278,3 +278,138 @@ def refresh_token(payload: RefreshRequest):
 
     new_pair = create_token_pair(user_id=user_id, username=username)
     return TokenPairResponse(**new_pair)
+
+# Get current user
+def get_current_user(authorization: str = Header(...)) -> dict:
+    """Extract and validate the access token from the Authorization header."""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header format.",
+        )
+
+    token = authorization[len("Bearer "):].strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access token is missing.",
+        )
+
+    try:
+        claims = decode_access_token(token)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token.",
+        ) from exc
+
+    user_id = str(claims.get("sub", "")).strip()
+    username = str(claims.get("username", "")).strip()
+    if not user_id or not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token payload.",
+        )
+
+    return {"id": user_id, "username": username}
+
+# Budget Inputs Payload, takes expected budget inputs and returns a dictionary with the expected types for each field
+class BudgetInputsPayload(BaseModel):
+    """Define the expected payload for budget inputs."""
+    monthlyIncome: float
+    rent: float
+    utilities: float
+    other: float
+    variableCosts: float
+    investments: float
+    monthlySavings: float
+
+# GET endpoint for retrieving budget inputs
+@app.get("/me/budget-inputs", status_code=status.HTTP_200_OK, response_model=BudgetInputsPayload)
+def get_budget_inputs(current_user: dict = Depends(get_current_user)):
+    try:
+        saved = load_user_budget_inputs(str(current_user["id"]))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load budget inputs.",
+        ) from exc
+
+    if not saved:
+        return BudgetInputsPayload(
+            monthlyIncome=0,
+            rent=0,
+            utilities=0,
+            other=0,
+            variableCosts=0,
+            investments=0,
+            monthlySavings=0,
+        )
+
+    return BudgetInputsPayload(
+        monthlyIncome=saved["monthly_income"],
+        rent=saved["rent"],
+        utilities=saved["utilities"],
+        other=saved["other"],
+        variableCosts=saved["variable_costs"],
+        investments=saved["investments"],
+        monthlySavings=saved["monthly_savings"],
+    )
+
+# PUT endpoint for updating budget inputs
+@app.put("/me/budget-inputs", status_code=status.HTTP_200_OK, response_model=BudgetInputsPayload)
+def update_budget_inputs(payload: BudgetInputsPayload, current_user: dict = Depends(get_current_user)):
+    try:
+        saved = load_user_budget_inputs(str(current_user["id"]))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load budget inputs.",
+        ) from exc
+
+    if not saved:
+        # If no existing record, create a new one
+        try:
+            saved = upsert_user_budget_inputs(
+                user_id=str(current_user["id"]),
+                monthly_income=payload.monthlyIncome,
+                rent=payload.rent,
+                utilities=payload.utilities,
+                other=payload.other,
+                variable_costs=payload.variableCosts,
+                investments=payload.investments,
+                monthly_savings=payload.monthlySavings,
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create budget inputs.",
+            ) from exc
+    else:
+        # Update the existing record
+        try:
+            saved = upsert_user_budget_inputs(
+                user_id=str(current_user["id"]),
+                monthly_income=payload.monthlyIncome,
+                rent=payload.rent,
+                utilities=payload.utilities,
+                other=payload.other,
+                variable_costs=payload.variableCosts,
+                investments=payload.investments,
+                monthly_savings=payload.monthlySavings,
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update budget inputs.",
+            ) from exc
+
+    return BudgetInputsPayload(
+        monthlyIncome=saved["monthly_income"],
+        rent=saved["rent"],
+        utilities=saved["utilities"],
+        other=saved["other"],
+        variableCosts=saved["variable_costs"],
+        investments=saved["investments"],
+        monthlySavings=saved["monthly_savings"],
+    )

@@ -104,3 +104,21 @@ def decode_refresh_token(token: str) -> dict[str, Any]:
         raise ValueError("Token is not a refresh token")
 
     return payload
+
+def decode_access_token(token: str) -> dict[str, Any]:
+    """Decode and validate an access token payload."""
+    try:
+        payload = jwt.decode(
+            token,
+            _get_jwt_secret(),
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "iat", "sub", "type"]},
+            issuer=_issuer(),
+        )
+    except InvalidTokenError as exc:
+        raise ValueError("Invalid token") from exc
+
+    if payload.get("type") != "access":
+        raise ValueError("Token is not an access token")
+
+    return payload
