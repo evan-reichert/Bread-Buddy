@@ -6,16 +6,22 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, status, Depends, Header
+from fastapi import FastAPI, HTTPException, status, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.security.passwords import hash_password, verify_password
 from backend.security.tokens import create_token_pair, decode_refresh_token, decode_access_token
 from database.database import create_user, get_user_by_username, init_db, load_user_budget_inputs, upsert_user_budget_inputs
 
 app = FastAPI()
+
+
+def _is_production_env() -> bool:
+    environment = os.getenv("APP_ENV", "development").strip().lower()
+    return environment in {"prod", "production"}
 
 
 def _load_local_env() -> None:
@@ -40,6 +46,11 @@ _load_local_env()
 
 def _database_is_configured() -> bool:
     return bool(os.getenv("DATABASE_URL", "").strip())
+
+
+def _csv_env(name: str) -> list[str]:
+    value = os.getenv(name, "")
+    return [part.strip() for part in value.split(",") if part.strip()]
 
 
 class RegisterRequest(BaseModel):
@@ -116,24 +127,52 @@ class LoginResponse(TokenPairResponse):
     message: str
 
 # CORS configuration
-cors_origins_env = os.getenv("CORS_ALLOW_ORIGINS", "")
-cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+cors_origins = _csv_env("CORS_ALLOW_ORIGINS")
+allow_origin_regex = None
 
 # Local dev fallback origins (used when CORS_ALLOW_ORIGINS is not set)
-if not cors_origins:
+if not cors_origins and not _is_production_env():
     cors_origins = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+    allow_origin_regex = "https?://(localhost|127\\.0\\.0\\.1)(:\\d+)?$"
+
+if _is_production_env() and not cors_origins:
+    raise RuntimeError("CORS_ALLOW_ORIGINS must be set in production.")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex="https?://(localhost|127\\.0\\.0\\.1)(:\\d+)?$",
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+trusted_hosts = _csv_env("TRUSTED_HOSTS")
+if _is_production_env() and not trusted_hosts:
+    raise RuntimeError("TRUSTED_HOSTS must be set in production.")
+if trusted_hosts:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+
+    if _is_production_env():
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=63072000; includeSubDomains; preload",
+        )
+
+    return response
 
 @app.on_event("startup")
 def startup_init_db() -> None:

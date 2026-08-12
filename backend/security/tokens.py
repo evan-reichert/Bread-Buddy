@@ -15,6 +15,7 @@ ALGORITHM = "HS256"
 DEFAULT_ISSUER = "bread-buddy-api"
 DEFAULT_ACCESS_MINUTES = 15
 DEFAULT_REFRESH_DAYS = 30
+DEV_FALLBACK_SECRET = "bread-buddy-dev-secret-change-me"
 
 
 def _get_int_env(name: str, default: int, *, minimum: int = 1) -> int:
@@ -31,7 +32,21 @@ def _get_jwt_secret() -> str:
 
     For local development, a fallback key is used when JWT_SECRET_KEY is not set.
     """
-    return os.getenv("JWT_SECRET_KEY", "bread-buddy-dev-secret-change-me")
+    secret = os.getenv("JWT_SECRET_KEY", "").strip()
+    environment = os.getenv("APP_ENV", "development").strip().lower()
+    is_production = environment in {"prod", "production"}
+
+    if not secret:
+        if is_production:
+            raise RuntimeError("JWT_SECRET_KEY must be set in production.")
+        return DEV_FALLBACK_SECRET
+
+    if is_production and (len(secret) < 32 or secret == DEV_FALLBACK_SECRET):
+        raise RuntimeError(
+            "JWT_SECRET_KEY must be a strong unique value (>= 32 chars) in production."
+        )
+
+    return secret
 
 
 def _token_expiry(token_type: str) -> timedelta:

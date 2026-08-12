@@ -18,6 +18,8 @@
 
 Bank tab persistence is defined in [database/database.py](database/database.py).
 
+Start by copying [.env.example](.env.example) to `.env` and filling in real values.
+
 1. Set `DATABASE_URL`:
 	- `postgresql://user:password@localhost:5432/bread_buddy`
 2. Install Python dependency:
@@ -35,6 +37,16 @@ Recommended environment variables:
 - `JWT_ACCESS_EXPIRE_MINUTES` (default: `15`)
 - `JWT_REFRESH_EXPIRE_DAYS` (default: `30`)
 - `JWT_ISSUER` (optional, default: `bread-buddy-api`)
+- `APP_ENV` (`development` or `production`; production enables stricter checks)
+- `CORS_ALLOW_ORIGINS` (required in production; comma-separated frontend origins)
+- `TRUSTED_HOSTS` (required in production; comma-separated API hostnames)
+
+Production safeguards now enforced by the backend:
+
+- Startup fails in production if `JWT_SECRET_KEY` is missing/weak.
+- Startup fails in production if `CORS_ALLOW_ORIGINS` is missing.
+- Startup fails in production if `TRUSTED_HOSTS` is missing.
+- Security headers are added to all API responses.
 
 Frontend API base URL (optional):
 
