@@ -119,7 +119,7 @@ function App() {
           onBackToSignIn={() => setScreen('auth')}
         />
       )}
-      {screen === 'app' && <Tabs />}
+      {screen === 'app' && <Tabs onLogout={() => setScreen('auth')}/>}
     </main>
   );
 }

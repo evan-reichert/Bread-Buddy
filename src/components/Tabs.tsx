@@ -1,6 +1,7 @@
 // Here is where we will create the tabs boilerplate
 // Import the dependencies that we will need to create the tabs component
 import { useState, useEffect, useRef } from 'react';
+import { clearStoredSession } from '../lib/auth';
 import bblogo from '../assets/bblogo.png';
 import Bank from './Bank';
 import { authenticatedGet, authenticatedPut } from '../lib/auth';
@@ -29,8 +30,10 @@ type BudgetInputsApi = {
     monthlySavings: number;
 };
 
+type TabsProps = { onLogout: () => void };
+
 // Define the tabs function that will be used to create the tabs component
-function Tabs() {
+function Tabs({ onLogout }: TabsProps) {
     const [activeTab, setActiveTab] = useState<string>('Dashboard');
     const hasHydratedRef = useRef(false);
     const saveTimeoutRef = useRef<number | null>(null);
@@ -101,6 +104,11 @@ function Tabs() {
 
         fetchBudgetInputs();
     }, []);
+    
+    function handleLogout() {
+        clearStoredSession();
+        onLogout();
+    }
 
     return (
         <div className="bb-container d-flex flex-column min-vh-100 w-100">
@@ -137,6 +145,13 @@ function Tabs() {
                             onClick={() => setActiveTab('Goals')}
                         >
                             Goals
+                        </button>
+                        <button
+                            type="button"
+                            className={`nav-link bb-tab-link`}
+                            onClick={handleLogout}
+                        >
+                            Logout
                         </button>
                     </nav>
                 </div>
