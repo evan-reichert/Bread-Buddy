@@ -248,7 +248,7 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
                 <p className="text-muted mb-2">Projected Leftover</p>
                 <p className="dashboard-leftover mb-2">{formatter.format(totals.leftover)}</p>
                 <p className="text-secondary mb-0 small">
-                  Based on income, fixed costs, and your monthly savings target.
+                  Based on income, fixed and variable costs, and your monthly savings target.
                 </p>
               </div>
             </motion.article>

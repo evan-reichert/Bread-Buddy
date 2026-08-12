@@ -1,10 +1,9 @@
 // Here is where we will create the tabs boilerplate
 // Import the dependencies that we will need to create the tabs component
 import { useState, useEffect, useRef } from 'react';
-import { clearStoredSession } from '../lib/auth';
+import { authenticatedGet, authenticatedPut, clearStoredSession } from '../lib/auth';
 import bblogo from '../assets/bblogo.png';
 import Bank from './Bank';
-import { authenticatedGet, authenticatedPut } from '../lib/auth';
 import Dashboard from './Dashboard';
 import Goals from './Goals';
 import './Tabs.css';
@@ -46,6 +45,15 @@ function Tabs({ onLogout }: TabsProps) {
         investments: '',
         monthlySavings: '',
     })
+
+    const isAuthExpiredError = (error: unknown) => (
+        error instanceof Error
+        && (
+            error.message.includes('Session expired')
+            || error.message.includes('Authentication required')
+        )
+    );
+
     useEffect(() => {
         if (!hasHydratedRef.current) {
             hasHydratedRef.current = true;
@@ -73,6 +81,10 @@ function Tabs({ onLogout }: TabsProps) {
                     monthlySavings: toNumber(budgetInputs.monthlySavings),
                 });
             } catch (error) {
+                if (isAuthExpiredError(error)) {
+                    onLogout();
+                    return;
+                }
                 console.error('Failed to save budget inputs:', error);
             }
         }, 500);
@@ -98,6 +110,10 @@ function Tabs({ onLogout }: TabsProps) {
                     monthlySavings: String(response.monthlySavings ?? ''),
                 });
             } catch (error) {
+                if (isAuthExpiredError(error)) {
+                    onLogout();
+                    return;
+                }
                 console.error('Failed to fetch budget inputs:', error);
             }
         };
@@ -106,6 +122,10 @@ function Tabs({ onLogout }: TabsProps) {
     }, []);
     
     function handleLogout() {
+        if (saveTimeoutRef.current !== null) {
+            window.clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
         clearStoredSession();
         onLogout();
     }
