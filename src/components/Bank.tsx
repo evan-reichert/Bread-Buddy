@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import Health from './Health';
 import type { BudgetInputs } from './Tabs';
+import { getTier, type HealthTier } from './TierLogic';
 import './Bank.css';
 
 // Define the WeeklySavings type and the weekly savings data that will be used to create the bank tab content
@@ -26,9 +27,6 @@ type WeeklySavings = {
     week: string;
     amount: number;
 };
-
-// Decor tier
-type DecorTier = 'green' | 'yellow' | 'red';
 
 // Define the animation variants that will be used to create the bank tab content
 const containerVariants = {
@@ -53,7 +51,7 @@ const riseInVariants = {
     },
 } as const;
 
-function OrbDecor({ className, tier }: { className: string; tier: DecorTier }) {
+function OrbDecor({ className, tier }: { className: string; tier: HealthTier }) {
     const decorByTier = {
                 green: { orb: greenOrb, spark: greenSpark },
                 yellow: { orb: yellowOrb, spark: yellowSpark },
@@ -123,16 +121,11 @@ function Bank({ budgetInputs }: BankProps) {
     const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
     const fixedCosts = rent + utilities + other + variableCosts + investments;
     const totalSaved = Math.max(0, income - fixedCosts);
-    const savingsRate = income > 0 ? totalSaved / income : 0;
-    const goalProgress = monthlyGoal > 0 ? totalSaved / monthlyGoal : 0;
-    let bankTier: DecorTier = 'red';
-    if (income > 0) {
-        if (goalProgress >= 1 || savingsRate >= 0.2) {
-            bankTier = 'green';
-        } else if (goalProgress >= 0.6 || savingsRate >= 0.1) {
-            bankTier = 'yellow';
-        }
-    }
+    const bankTier = getTier({
+        income,
+        fixedCosts,
+        monthlyGoal,
+    });
     const remainingToGoal = Math.max(0, monthlyGoal - totalSaved);
     const weeklySavingsData = buildWeeklySavings(totalSaved);
     const monthToDateContribution = weeklySavingsData.reduce((sum, item) => sum + item.amount, 0);

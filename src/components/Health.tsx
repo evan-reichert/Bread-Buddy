@@ -10,6 +10,7 @@ import redSpark from '../assets/red-spark.svg';
 import yellowOrb from '../assets/yellow-orb.svg';
 import redOrb from '../assets/red-orb.svg';
 import type { BudgetInputs } from './Tabs';
+import { getTier, type HealthTier } from './TierLogic';
 import './Health.css';
 
 // Define the HealthProps type that will be used to create the savings health component
@@ -17,11 +18,8 @@ type HealthProps = {
 	budgetInputs: BudgetInputs;
 };
 
-// Decor tier
-type DecorTier = 'green' | 'yellow' | 'red';
-
 // Define the animation variants that will be used to create the savings health component
-function OrbDecor({ className, tier }: { className: string; tier: DecorTier }) {
+function OrbDecor({ className, tier }: { className: string; tier: HealthTier }) {
 	const decorByTier = {
                 green: { orb: greenOrb, spark: greenSpark },
                 yellow: { orb: yellowOrb, spark: yellowSpark },
@@ -70,18 +68,11 @@ function Health({ budgetInputs }: HealthProps) {
 	const savingsRate = income > 0 ? totalSaved / income : 0;
 	const goalProgress = monthlyGoal > 0 ? totalSaved / monthlyGoal : 0;
 
-    // Define a health tier based on the savings rate and goal progress
-    type HealthTier = 'green' | 'yellow' | 'red';
-    let healthTier: HealthTier = 'red';
-    if (income <= 0) {
-        healthTier = 'red';
-    } else if (goalProgress >= 1 || savingsRate >= 0.2) {
-        healthTier = 'green';
-    } else if (goalProgress >= 0.6 || savingsRate >= 0.1) {
-        healthTier = 'yellow';
-    } else {
-        healthTier = 'red';
-    }
+	const healthTier = getTier({
+		income,
+		fixedCosts,
+		monthlyGoal,
+	});
 
     // Create the tier colors
     const greenColor = '0 18px 30px rgba(34, 197, 94, 0.35)';
