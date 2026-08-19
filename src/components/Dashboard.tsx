@@ -3,10 +3,17 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import bbmasc from '../assets/bbmasc.png';
+import bbmasc_meh from '../assets/bbmasc_meh.png';
+import bbmasc_mold from '../assets/bbmasc_mold.png';
 import greenOrb from '../assets/green-orb.svg';
 import greenSpark from '../assets/green-spark.svg';
+import yellowOrb from '../assets/yellow-orb.svg';
+import yellowSpark from '../assets/yellow-spark.svg';
+import redOrb from '../assets/red-orb.svg';
+import redSpark from '../assets/red-spark.svg';
 import type { BudgetInputs } from './Tabs';
 import './Dashboard.css';
+import { getTier, type HealthTier } from './TierLogic';
 
 type BudgetField = {
   key: Exclude<keyof BudgetInputs, 'monthlySavings'>;
@@ -43,11 +50,28 @@ const itemVariants = {
   },
 } as const;
 
-function BubbleDecor() {
+// Map decor by tier
+type decorByTier = {
+  green: { orb: string; spark: string };
+  yellow: { orb: string; spark: string };
+  red: { orb: string; spark: string };
+};
+
+const decorByTier: decorByTier = {
+  green: { orb: greenOrb, spark: greenSpark },
+  yellow: { orb: yellowOrb, spark: yellowSpark },
+  red: { orb: redOrb, spark: redSpark },
+};
+// Alias the HealthTier type to DecorType for clarity in the context of the Dashboard component
+type DecorType = HealthTier
+
+// Define the BubbleDecor component that will be used to create the animated decorative elements in the dashboard
+function BubbleDecor( { tier }: { tier?: DecorType }) {
+  const decor = decorByTier[tier];
   return (
     <>
       <motion.img
-        src={greenOrb}
+        src={decor.orb}
         alt=""
         aria-hidden="true"
         className="dashboard-svg-orb"
@@ -56,7 +80,7 @@ function BubbleDecor() {
         transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.img
-        src={greenSpark}
+        src={decor.spark}
         alt=""
         aria-hidden="true"
         className="dashboard-svg-spark"
@@ -75,6 +99,26 @@ type DashboardProps = {
 
 function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
   const [activeDashboardTab, setActiveDashboardTab] = useState<'Budget' | 'Savings'>('Budget');
+
+  const income = Number(budgetInputs.monthlyIncome) || 0;
+  const fixedCosts = (Number(budgetInputs.rent) || 0)
+    + (Number(budgetInputs.utilities) || 0)
+    + (Number(budgetInputs.other) || 0)
+    + (Number(budgetInputs.variableCosts) || 0)
+    + (Number(budgetInputs.investments) || 0);
+  const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
+  const dashboardTier = getTier({
+    income,
+    fixedCosts,
+    monthlyGoal,
+  });
+
+  const mascotByTier: Record<HealthTier, { src: string; alt: string }> = {
+    green: { src: bbmasc, alt: 'Bread Buddy mascot support' },
+    yellow: { src: bbmasc_meh, alt: 'Bread Buddy mascot support (cautious)' },
+    red: { src: bbmasc_mold, alt: 'Bread Buddy mascot support (warning)' },
+  };
+  const activeMascot = mascotByTier[dashboardTier];
 
   const handleFieldChange = (key: keyof BudgetInputs, value: string) => {
     const numericValue = value.replace(/[^\d.]/g, '');
@@ -145,7 +189,7 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
       >
         <div className="card-body d-flex flex-column flex-md-row align-items-center gap-3 gap-md-4">
           <motion.div
-            className="dashboard-mascot-shell"
+            className={`dashboard-mascot-shell dashboard-mascot-shell-${dashboardTier}`}
             initial={{ scale: 0.9, opacity: 0, y: 14 }}
             animate={{
               opacity: 1,
@@ -159,7 +203,7 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
             }}
             whileHover={{ scale: 1.09, rotate: -3 }}
           >
-            <img src={bbmasc} alt="Bread Buddy mascot support" className="dashboard-mascot" />
+            <img src={activeMascot.src} alt={activeMascot.alt} className="dashboard-mascot" />
           </motion.div>
 
           <div className="dashboard-support-copy text-center text-md-start">
@@ -182,7 +226,7 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
                 whileTap={{ scale: 0.985 }}
               >
                 <div className="card-body">
-                  <BubbleDecor />
+                  <BubbleDecor tier={dashboardTier} />
                   <label htmlFor={field.key} className="form-label text-muted mb-2">
                     {field.label}
                   </label>
@@ -214,7 +258,7 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
               whileTap={{ scale: 0.985 }}
             >
               <div className="card-body">
-                <BubbleDecor />
+                <BubbleDecor tier={dashboardTier} />
                 <label htmlFor="monthlySavings" className="form-label text-muted mb-2">
                   Target Monthly Savings
                 </label>
@@ -244,7 +288,7 @@ function Dashboard({ budgetInputs, onBudgetInputsChange }: DashboardProps) {
               whileTap={{ scale: 0.985 }}
             >
               <div className="card-body">
-                <BubbleDecor />
+                <BubbleDecor tier={dashboardTier} />
                 <p className="text-muted mb-2">Projected Leftover</p>
                 <p className="dashboard-leftover mb-2">{formatter.format(totals.leftover)}</p>
                 <p className="text-secondary mb-0 small">

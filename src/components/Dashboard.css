@@ -24,6 +24,21 @@
   filter: drop-shadow(0 14px 20px rgba(34, 197, 94, 0.22));
 }
 
+.dashboard-mascot-shell-green {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.22) 0%, rgba(34, 197, 94, 0.05) 62%, rgba(255, 255, 255, 0) 84%);
+  filter: drop-shadow(0 14px 20px rgba(34, 197, 94, 0.22));
+}
+
+.dashboard-mascot-shell-yellow {
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.24) 0%, rgba(250, 204, 21, 0.06) 62%, rgba(255, 255, 255, 0) 84%);
+  filter: drop-shadow(0 14px 20px rgba(250, 204, 21, 0.24));
+}
+
+.dashboard-mascot-shell-red {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.24) 0%, rgba(239, 68, 68, 0.06) 62%, rgba(255, 255, 255, 0) 84%);
+  filter: drop-shadow(0 14px 20px rgba(239, 68, 68, 0.24));
+}
+
 .dashboard-mascot {
   width: 124px;
   height: 124px;

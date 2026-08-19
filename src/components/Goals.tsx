@@ -3,10 +3,17 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import bbmasc from '../assets/bbmasc.png';
+import bbmasc_meh from '../assets/bbmasc_meh.png';
+import bbmasc_mold from '../assets/bbmasc_mold.png';
 import greenOrb from '../assets/green-orb.svg';
 import greenSpark from '../assets/green-spark.svg';
+import yellowOrb from '../assets/yellow-orb.svg';
+import yellowSpark from '../assets/yellow-spark.svg';
+import redOrb from '../assets/red-orb.svg';
+import redSpark from '../assets/red-spark.svg';
 import type { BudgetInputs } from './Tabs';
 import './Goals.css';
+import { getTier, type HealthTier } from './TierLogic';
 
 type GoalsProps = {
     budgetInputs: BudgetInputs;
@@ -33,11 +40,28 @@ const riseInVariants = {
     },
 } as const;
 
-function BubbleDecor() {
+
+// Map decor by tier
+type decorByTier = {
+  green: { orb: string; spark: string };
+  yellow: { orb: string; spark: string };
+  red: { orb: string; spark: string };
+};
+
+const decorByTier: decorByTier = {
+  green: { orb: greenOrb, spark: greenSpark },
+  yellow: { orb: yellowOrb, spark: yellowSpark },
+  red: { orb: redOrb, spark: redSpark },
+};
+// Alias the HealthTier type to DecorType for clarity in the context of the Dashboard component
+type DecorType = HealthTier
+
+function BubbleDecor( { tier }: { tier: DecorType }) {
+    const decor = decorByTier[tier];
     return (
         <>
             <motion.img
-                src={greenOrb}
+                src={decor.orb}
                 alt=""
                 aria-hidden="true"
                 className="goals-svg-orb"
@@ -46,7 +70,7 @@ function BubbleDecor() {
                 transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.img
-                src={greenSpark}
+                src={decor.spark}
                 alt=""
                 aria-hidden="true"
                 className="goals-svg-spark"
@@ -70,6 +94,19 @@ function Goals({ budgetInputs }: GoalsProps) {
         + (Number(budgetInputs.variableCosts) || 0)
         + (Number(budgetInputs.investments) || 0);
     const savingsTarget = Number(budgetInputs.monthlySavings) || 0;
+    const goalTier = getTier({
+        income,
+        fixedCosts: costs,
+        monthlyGoal: savingsTarget,
+    });
+
+    const mascotByTier: Record<HealthTier, { src: string; alt: string }> = {
+        green: { src: bbmasc, alt: 'Bread Buddy mascot' },
+        yellow: { src: bbmasc_meh, alt: 'Bread Buddy mascot (cautious)' },
+        red: { src: bbmasc_mold, alt: 'Bread Buddy mascot (warning)' },
+    };
+    const activeMascot = mascotByTier[goalTier];
+
     const projectedSavings = Math.max(0, income - costs);
     const projectedDailySavings = projectedSavings / 30;
     const gapToTarget = Math.max(0, savingsTarget - projectedSavings);
@@ -109,7 +146,7 @@ function Goals({ budgetInputs }: GoalsProps) {
                 <div className="card-body p-4">
                     <div className="d-flex flex-column flex-md-row align-items-center gap-3 gap-md-4">
                         <motion.div
-                            className="goals-mascot-shell"
+                            className={`goals-mascot-shell goals-mascot-shell-${goalTier}`}
                             initial={{ scale: 0.9, opacity: 0, y: 14 }}
                             animate={{ opacity: 1, scale: [1, 1.04, 1], y: [0, -7, 0] }}
                             transition={{
@@ -119,7 +156,7 @@ function Goals({ budgetInputs }: GoalsProps) {
                             }}
                             whileHover={{ scale: 1.08, rotate: -3 }}
                         >
-                            <img src={bbmasc} alt="Bread Buddy mascot" className="goals-mascot" />
+                            <img src={activeMascot.src} alt={activeMascot.alt} className="goals-mascot" />
                         </motion.div>
 
                         <div>
@@ -142,7 +179,7 @@ function Goals({ budgetInputs }: GoalsProps) {
                             whileTap={{ scale: 0.985 }}
                         >
                             <div className="card-body">
-                                <BubbleDecor />
+                                <BubbleDecor tier={goalTier} />
                                 <p className="text-muted mb-2">{item.label}</p>
                                 <h3 className="h5 mb-0">{item.value}</h3>
                             </div>
