@@ -1,8 +1,14 @@
 // Here is where the savings health is designated
 import { motion } from 'framer-motion';
 import bbmasc from '../assets/bbmasc.png';
+import bbmasc_mold from '../assets/bbmasc_mold.png';
+import bbmasc_meh from '../assets/bbmasc_meh.png';
 import greenOrb from '../assets/green-orb.svg';
 import greenSpark from '../assets/green-spark.svg';
+import yellowSpark from '../assets/yellow-spark.svg';
+import redSpark from '../assets/red-spark.svg';
+import yellowOrb from '../assets/yellow-orb.svg';
+import redOrb from '../assets/red-orb.svg';
 import type { BudgetInputs } from './Tabs';
 import './Health.css';
 
@@ -11,12 +17,22 @@ type HealthProps = {
 	budgetInputs: BudgetInputs;
 };
 
+// Decor tier
+type DecorTier = 'green' | 'yellow' | 'red';
+
 // Define the animation variants that will be used to create the savings health component
-function OrbDecor({ className }: { className: string }) {
+function OrbDecor({ className, tier }: { className: string; tier: DecorTier }) {
+	const decorByTier = {
+                green: { orb: greenOrb, spark: greenSpark },
+                yellow: { orb: yellowOrb, spark: yellowSpark },
+                red: { orb: redOrb, spark: redSpark },
+		};
+    const decor = decorByTier[tier];
+
 	return (
 		<>
 			<motion.img
-				src={greenOrb}
+				src={decor.orb}
 				alt=""
 				aria-hidden="true"
 				className={className}
@@ -25,7 +41,7 @@ function OrbDecor({ className }: { className: string }) {
 				transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
 			/>
 			<motion.img
-				src={greenSpark}
+				src={decor.spark}
 				alt=""
 				aria-hidden="true"
 				className={`${className} health-svg-spark`}
@@ -54,6 +70,35 @@ function Health({ budgetInputs }: HealthProps) {
 	const savingsRate = income > 0 ? totalSaved / income : 0;
 	const goalProgress = monthlyGoal > 0 ? totalSaved / monthlyGoal : 0;
 
+    // Define a health tier based on the savings rate and goal progress
+    type HealthTier = 'green' | 'yellow' | 'red';
+    let healthTier: HealthTier = 'red';
+    if (income <= 0) {
+        healthTier = 'red';
+    } else if (goalProgress >= 1 || savingsRate >= 0.2) {
+        healthTier = 'green';
+    } else if (goalProgress >= 0.6 || savingsRate >= 0.1) {
+        healthTier = 'yellow';
+    } else {
+        healthTier = 'red';
+    }
+
+    // Create the tier colors
+    const greenColor = '0 18px 30px rgba(34, 197, 94, 0.35)';
+    const yellowColor = '0 18px 30px rgba(250, 204, 21, 0.35)';
+    const redColor = '0 18px 30px rgba(239, 68, 68, 0.35)';
+
+    // Create the tier config map
+	const tierConfig = new Map<HealthTier, { mascot: string; mascotAlt: string; hoverShadow: string }>([
+        ['green', { hoverShadow: greenColor, mascot: bbmasc, mascotAlt: 'Bread Buddy mascot' }],
+        ['yellow', { hoverShadow: yellowColor, mascot: bbmasc_meh, mascotAlt: 'Bread Buddy mascot' }],
+        ['red', { hoverShadow: redColor, mascot: bbmasc_mold, mascotAlt: 'Bread Buddy mascot with mold' }],
+    ]);
+
+    // Get the current tier config based on the health tier
+	const activeTier = tierConfig.get(healthTier) || { hoverShadow: greenColor, mascot: bbmasc, mascotAlt: 'Bread Buddy mascot' };
+
+
     // Formats data into a currency format for display
 	const currencyFormatter = new Intl.NumberFormat('en-US', {
 		style: 'currency',
@@ -81,11 +126,11 @@ function Health({ budgetInputs }: HealthProps) {
 
     // Return the TSX for the savings health component
 	return (
-		<motion.div className="health-hero card border-0 shadow-sm mb-4" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: 'easeOut' }}>
+		<motion.div className={`health-hero-${healthTier} card border-0 shadow-sm mb-4`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: 'easeOut' }}>
 			<div className="card-body d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
 				<div className="d-flex align-items-center gap-3">
 					<motion.div
-						className="health-mascot-shell"
+						className={`health-mascot-shell health-mascot-shell-${healthTier}`}
 						initial={{ scale: 0.9, opacity: 0, y: 16 }}
 						animate={{
 							scale: [1, 1.04, 1],
@@ -99,7 +144,7 @@ function Health({ budgetInputs }: HealthProps) {
 						}}
 						whileHover={{ scale: 1.08, rotate: -3 }}
 					>
-						<img src={bbmasc} alt="Bread Buddy mascot" className="health-mascot" />
+						<img src={activeTier.mascot} alt={activeTier.mascotAlt} className="health-mascot" />
 					</motion.div>
 
 					<div>
@@ -110,11 +155,11 @@ function Health({ budgetInputs }: HealthProps) {
 				</div>
 
 				<motion.div
-					className="health-saved-bubble text-center"
-					whileHover={{ y: -6, scale: 1.03, boxShadow: '0 18px 30px rgba(34, 197, 94, 0.35)' }}
+					className={`health-saved-bubble-${healthTier} text-center`}
+					whileHover={{ y: -6, scale: 1.03, boxShadow: activeTier.hoverShadow }}
 					whileTap={{ scale: 0.98 }}
 				>
-					<OrbDecor className="health-svg-orb health-svg-orb--saved" />
+					<OrbDecor className="health-svg-orb health-svg-orb--saved" tier={healthTier} />
 					<p className="mb-1 health-saved-label">Saved so far</p>
 					<p className="mb-0 health-saved-value">{currencyFormatter.format(totalSaved)}</p>
 				</motion.div>

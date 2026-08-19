@@ -3,9 +3,14 @@
 import { motion } from 'framer-motion';
 import greenOrb from '../assets/green-orb.svg';
 import greenSpark from '../assets/green-spark.svg';
+import yellowSpark from '../assets/yellow-spark.svg';
+import redSpark from '../assets/red-spark.svg';
+import yellowOrb from '../assets/yellow-orb.svg';
+import redOrb from '../assets/red-orb.svg';
 import {
     Bar,
     BarChart,
+    Cell,
     CartesianGrid,
     ResponsiveContainer,
     Tooltip,
@@ -21,6 +26,9 @@ type WeeklySavings = {
     week: string;
     amount: number;
 };
+
+// Decor tier
+type DecorTier = 'green' | 'yellow' | 'red';
 
 // Define the animation variants that will be used to create the bank tab content
 const containerVariants = {
@@ -45,11 +53,18 @@ const riseInVariants = {
     },
 } as const;
 
-function OrbDecor({ className }: { className: string }) {
+function OrbDecor({ className, tier }: { className: string; tier: DecorTier }) {
+    const decorByTier = {
+                green: { orb: greenOrb, spark: greenSpark },
+                yellow: { orb: yellowOrb, spark: yellowSpark },
+                red: { orb: redOrb, spark: redSpark },
+            };
+    const decor = decorByTier[tier];
+
     return (
         <>
             <motion.img
-                src={greenOrb}
+                src={decor.orb}
                 alt=""
                 aria-hidden="true"
                 className={className}
@@ -58,7 +73,7 @@ function OrbDecor({ className }: { className: string }) {
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.img
-                src={greenSpark}
+                src={decor.spark}
                 alt=""
                 aria-hidden="true"
                 className={`${className} bank-svg-spark`}
@@ -71,10 +86,25 @@ function OrbDecor({ className }: { className: string }) {
 }
 
 function buildWeeklySavings(totalSaved: number): WeeklySavings[] {
-    const weights = [0.18, 0.24, 0.29, 0.29];
-    return weights.map((weight, index) => ({
+    if (totalSaved <= 0) {
+        return [
+            { week: 'Week 1', amount: 0 },
+            { week: 'Week 2', amount: 0 },
+            { week: 'Week 3', amount: 0 },
+            { week: 'Week 4', amount: 0 },
+        ];
+    }
+
+    // Deliberately uneven distribution to better mimic real week-to-week saving changes.
+    const weights = [0.19, 0.23, 0.27, 0.31];
+    const rounded = weights.map((weight) => Math.round(totalSaved * weight));
+    const roundedTotal = rounded.reduce((sum, value) => sum + value, 0);
+    const correction = Math.round(totalSaved - roundedTotal);
+    rounded[rounded.length - 1] = Math.max(0, rounded[rounded.length - 1] + correction);
+
+    return rounded.map((amount, index) => ({
         week: `Week ${index + 1}`,
-        amount: Math.round(totalSaved * weight),
+        amount,
     }));
 }
 
@@ -93,12 +123,24 @@ function Bank({ budgetInputs }: BankProps) {
     const monthlyGoal = Number(budgetInputs.monthlySavings) || 0;
     const fixedCosts = rent + utilities + other + variableCosts + investments;
     const totalSaved = Math.max(0, income - fixedCosts);
+    const savingsRate = income > 0 ? totalSaved / income : 0;
+    const goalProgress = monthlyGoal > 0 ? totalSaved / monthlyGoal : 0;
+    let bankTier: DecorTier = 'red';
+    if (income > 0) {
+        if (goalProgress >= 1 || savingsRate >= 0.2) {
+            bankTier = 'green';
+        } else if (goalProgress >= 0.6 || savingsRate >= 0.1) {
+            bankTier = 'yellow';
+        }
+    }
     const remainingToGoal = Math.max(0, monthlyGoal - totalSaved);
     const weeklySavingsData = buildWeeklySavings(totalSaved);
     const monthToDateContribution = weeklySavingsData.reduce((sum, item) => sum + item.amount, 0);
     const weeklyAverage = Math.round(monthToDateContribution / weeklySavingsData.length);
     const bestWeekAmount = Math.max(...weeklySavingsData.map((item) => item.amount), 0);
     const nextMilestone = totalSaved > 0 ? Math.ceil(totalSaved / 500) * 500 : 500;
+    const yAxisMax = Math.max(100, ...weeklySavingsData.map((item) => item.amount));
+    const chartAnimationKey = weeklySavingsData.map((item) => item.amount).join('-');
 
     // Define the currency formatter that will be used to format the currency values
     const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -134,7 +176,7 @@ function Bank({ budgetInputs }: BankProps) {
                             whileTap={{ scale: 0.985 }}
                         >
                             <div className="card-body">
-                                <OrbDecor className="bank-svg-orb bank-svg-orb--metric" />
+                                <OrbDecor className="bank-svg-orb bank-svg-orb--metric" tier={bankTier} />
                                 <p className="text-muted mb-2">{item.label}</p>
                                 <h3 className="h5 mb-0">{item.value}</h3>
                             </div>
@@ -152,10 +194,15 @@ function Bank({ budgetInputs }: BankProps) {
 
                     <div className="bank-chart-wrap">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={weeklySavingsData} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+                            <BarChart
+                                key={chartAnimationKey}
+                                data={weeklySavingsData}
+                                margin={{ top: 10, right: 8, left: -18, bottom: 0 }}
+                            >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                 <XAxis dataKey="week" tickLine={false} axisLine={false} />
                                 <YAxis
+                                    domain={[0, Math.ceil(yAxisMax * 1.15)]}
                                     tickLine={false}
                                     axisLine={false}
                                     tickFormatter={(value) => `$${value}`}
@@ -164,7 +211,22 @@ function Bank({ budgetInputs }: BankProps) {
                                     cursor={{ fill: 'rgba(34, 197, 94, 0.10)' }}
                                     formatter={(value: number) => [currencyFormatter.format(value), 'Saved']}
                                 />
-                                <Bar dataKey="amount" radius={[10, 10, 0, 0]} fill="#22C55E" />
+                                <Bar
+                                    dataKey="amount"
+                                    radius={[10, 10, 0, 0]}
+                                    isAnimationActive={true}
+                                    animationDuration={900}
+                                    animationBegin={120}
+                                    animationEasing="ease-out"
+                                    minPointSize={4}
+                                >
+                                    {weeklySavingsData.map((item, index) => (
+                                        <Cell
+                                            key={`${item.week}-${item.amount}`}
+                                            fill={index % 2 === 0 ? '#22C55E' : '#16A34A'}
+                                        />
+                                    ))}
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

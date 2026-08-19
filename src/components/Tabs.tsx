@@ -54,6 +54,21 @@ function Tabs({ onLogout }: TabsProps) {
         )
     );
 
+    const toNumber = (value: string) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const buildBudgetPayload = (inputs: BudgetInputs) => ({
+        monthlyIncome: toNumber(inputs.monthlyIncome),
+        rent: toNumber(inputs.rent),
+        utilities: toNumber(inputs.utilities),
+        other: toNumber(inputs.other),
+        variableCosts: toNumber(inputs.variableCosts),
+        investments: toNumber(inputs.investments),
+        monthlySavings: toNumber(inputs.monthlySavings),
+    });
+
     useEffect(() => {
         if (!hasHydratedRef.current) {
             hasHydratedRef.current = true;
@@ -64,22 +79,9 @@ function Tabs({ onLogout }: TabsProps) {
             window.clearTimeout(saveTimeoutRef.current);
         }
 
-        const toNumber = (value: string) => {
-            const parsed = Number(value);
-            return Number.isFinite(parsed) ? parsed : 0;
-        };
-
         saveTimeoutRef.current = window.setTimeout(async () => {
             try {
-                await authenticatedPut('/me/budget-inputs', {
-                    monthlyIncome: toNumber(budgetInputs.monthlyIncome),
-                    rent: toNumber(budgetInputs.rent),
-                    utilities: toNumber(budgetInputs.utilities),
-                    other: toNumber(budgetInputs.other),
-                    variableCosts: toNumber(budgetInputs.variableCosts),
-                    investments: toNumber(budgetInputs.investments),
-                    monthlySavings: toNumber(budgetInputs.monthlySavings),
-                });
+                await authenticatedPut('/me/budget-inputs', buildBudgetPayload(budgetInputs));
             } catch (error) {
                 if (isAuthExpiredError(error)) {
                     onLogout();
@@ -121,11 +123,22 @@ function Tabs({ onLogout }: TabsProps) {
         fetchBudgetInputs();
     }, []);
     
-    function handleLogout() {
+    async function handleLogout() {
         if (saveTimeoutRef.current !== null) {
             window.clearTimeout(saveTimeoutRef.current);
             saveTimeoutRef.current = null;
         }
+
+        try {
+            await authenticatedPut('/me/budget-inputs', buildBudgetPayload(budgetInputs));
+        } catch (error) {
+            if (isAuthExpiredError(error)) {
+                onLogout();
+                return;
+            }
+            console.error('Failed to save budget inputs during logout:', error);
+        }
+
         clearStoredSession();
         onLogout();
     }
