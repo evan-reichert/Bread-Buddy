@@ -66,7 +66,7 @@ const decorByTier: decorByTier = {
 type DecorType = HealthTier
 
 // Define the BubbleDecor component that will be used to create the animated decorative elements in the dashboard
-function BubbleDecor( { tier }: { tier?: DecorType }) {
+function BubbleDecor( { tier }: { tier: DecorType }) {
   const decor = decorByTier[tier];
   return (
     <>

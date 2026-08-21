@@ -202,7 +202,11 @@ function Bank({ budgetInputs }: BankProps) {
                                 />
                                 <Tooltip
                                     cursor={{ fill: 'rgba(34, 197, 94, 0.10)' }}
-                                    formatter={(value: number) => [currencyFormatter.format(value), 'Saved']}
+                                    formatter={(value) => {
+                                        const numericValue =
+                                            typeof value === 'number' ? value : Number(value) || 0;
+                                        return [currencyFormatter.format(numericValue), 'Saved'];
+                                    }}
                                 />
                                 <Bar
                                     dataKey="amount"

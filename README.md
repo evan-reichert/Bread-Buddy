@@ -160,7 +160,7 @@ Require header: `Authorization: Bearer <access_token>`
 
 ## 🐳 Run with Docker
 
-This repo currently containers the **backend API**. Frontend runs with Vite locally or on Vercel.
+This repo currently containerizes the **backend API**. Frontend runs with Vite locally or on Vercel.
 
 ### 1) Build backend image
 
@@ -200,6 +200,18 @@ VITE_API_BASE_URL=http://127.0.0.1:8000 npm run dev
 ```
 
 If you want full local orchestration later, a `docker-compose.yml` can be added for API + PostgreSQL + frontend.
+
+---
+
+## ✅ Deployment readiness (current)
+
+As of this iteration:
+
+- Frontend production build succeeds (`npm run build`)
+- Backend Docker image builds successfully
+- Dockerized API health check responds on `/health`
+
+This is the MVP baseline I am deploying from.
 
 ---
 
@@ -243,6 +255,19 @@ Production safeguards now enforced by the backend:
 Frontend API base URL (optional):
 
 - `VITE_API_BASE_URL` (default: `http://127.0.0.1:8000`)
+
+---
+
+## 🛡️ Security roadmap (near-term)
+
+Bread Buddy is deployable as an MVP today, and these security upgrades are planned next:
+
+1. Move refresh token handling from browser storage to `HttpOnly` cookies.
+2. Add request rate limiting on auth endpoints (`/register`, `/login`, `/token/refresh`).
+3. Add stricter client-side hardening (`Content-Security-Policy` and tighter frontend asset policy).
+4. Add automated security checks in CI (dependency scans + build/test gate).
+
+I am intentionally shipping first, then hardening in visible follow-up iterations in the near future.
 
 ---
 
