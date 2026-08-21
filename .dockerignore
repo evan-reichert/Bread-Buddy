@@ -1,0 +1,18 @@
+# VCS
+.git
+.gitignore
+
+# Node frontend artifacts (not needed in backend container)
+node_modules
+dist
+
+# Python local artifacts
+venv
+__pycache__
+*.pyc
+
+# Local config and editor files
+.env
+.vscode
+.idea
+.DS_Store
